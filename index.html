@@ -1,0 +1,1036 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0e1015" media="(prefers-color-scheme: dark)"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ford Circles"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"></head><body>
+<title>Ford Circles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an instrument — the canvas is the page, with a control rail beside it on desktop and stacked under it on phones */
+:root{
+  --bg:#f3f4f7;--panel:#ffffff;--ink:#15171c;--dim:#5d6270;--line:#d9dce4;
+  --accent:#2f5be0;--conv:#d9822b;--tan:#c2417a;
+  --serif:"Source Serif 4",Georgia,serif;--sans:"Atkinson Hyperlegible",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1015;--panel:#161922;--ink:#e8e9ee;--dim:#9297a6;--line:#2a2e3a;--accent:#7d9bff;--conv:#f0a252;--tan:#ef6fa6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1015;--panel:#161922;--ink:#e8e9ee;--dim:#9297a6;--line:#2a2e3a;--accent:#7d9bff;--conv:#f0a252;--tan:#ef6fa6;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,44px);margin:0;letter-spacing:-.01em}
+.sub{color:var(--dim);margin:0;max-width:70ch}
+.sub code,.mono{font-family:var(--mono);font-size:.92em}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+canvas.mini{height:auto;cursor:default;touch-action:auto;border-radius:6px}
+canvas{display:block;width:100%;height:clamp(300px,58vw,620px);touch-action:none;cursor:grab}
+canvas.drag{cursor:grabbing}
+.hud{position:absolute;left:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.hud button,.btn{font:500 14px var(--sans);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer}
+.hud button{min-width:36px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.view{position:absolute;right:10px;top:10px;max-width:46%;text-align:right;font:11px var(--mono);color:var(--dim);background:color-mix(in srgb,var(--panel) 85%,transparent);padding:4px 8px;border-radius:6px;font-variant-numeric:tabular-nums}
+aside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h2{font-family:var(--serif);font-weight:600;font-size:18px;margin:0}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.row output{font:13px var(--mono);min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.inline{display:flex;gap:8px}
+.inline input[type=text]{flex:1;min-width:0;font:14px var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:13px var(--mono);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip.conv{border-color:var(--conv);color:var(--conv)}
+.chip.on{background:var(--conv);color:#fff;border-color:var(--conv)}
+.convnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.convnav span{font:12px var(--mono);color:var(--dim);text-align:center;min-width:0}
+.btn:disabled{opacity:.45;cursor:default}
+.note{font-size:13px}
+select{font:14px var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
+#labSpor{max-height:8em;overflow:auto}
+.scan summary{cursor:pointer;font-weight:700;font-size:14px;padding:4px 0}
+.scan textarea{width:100%;font:13px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);margin:6px 0}
+.scanres{font:12px var(--mono);display:flex;flex-direction:column;gap:6px;max-height:22em;overflow:auto;margin-top:8px}
+.scanres .it{border:1px solid var(--line);border-radius:7px;padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.scanres .it b{font-weight:500}.scanres .tag{font:11px var(--sans);border-radius:5px;padding:1px 6px;margin-left:6px}
+.tag.new{background:var(--conv);color:#fff}.tag.known{background:var(--line);color:var(--dim)}.tag.weak{border:1px solid var(--line);color:var(--dim)}
+.labf{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:14px}
+.labf input,.labf select{font:14px var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-width:0}
+.pair{display:flex;gap:6px;min-width:0}.pair input{flex:1;min-width:0;width:auto}
+.cert{font:12px var(--mono);overflow-wrap:anywhere;display:flex;flex-direction:column;gap:3px}.cert .ok{color:var(--accent)}.cert .no{color:var(--tan)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.err{color:var(--tan);font-size:13px;min-height:1em}
+.frac{display:inline-flex;flex-direction:column;align-items:center;font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.05;vertical-align:middle}
+.frac span+span{border-top:2px solid currentColor;padding-top:2px}
+.sel{display:flex;gap:14px;align-items:center}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:14px}
+dt{color:var(--dim)}dd{margin:0;font-family:var(--mono);font-size:13px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.toggles{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:14px}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.cf{font:13px var(--mono);overflow-wrap:anywhere}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.facts .card p{margin:0;font-size:14px;color:var(--dim)}
+.facts b{color:var(--ink);font-weight:700}
+.big{font:500 22px var(--mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)}
+.ramp{flex:1;height:8px;border-radius:4px}
+.steps{font:12px var(--mono);max-height:15em;overflow:auto;display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
+.steps div{overflow-wrap:anywhere}.steps .win{color:var(--conv);font-weight:500}.steps .no{color:var(--dim)}
+table.rt{border-collapse:collapse;font:12px var(--mono);width:100%;font-variant-numeric:tabular-nums}
+table.rt td,table.rt th{padding:2px 4px;text-align:right;border-bottom:1px solid var(--line)}table.rt th{color:var(--dim);font-weight:400}
+.rtwrap{max-height:16em;overflow:auto}
+input[type=number]{font:14px var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);width:7em}
+
+.tabs{display:flex;flex-wrap:wrap;gap:4px;position:sticky;top:0;z-index:3;background:var(--bg);padding:2px 0 8px}
+.tab{font:500 13px var(--sans);border:1px solid var(--line);background:var(--panel);color:var(--dim);border-radius:7px;padding:5px 10px;cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.card.hid{display:none}
+.card .lblh{margin:0}
+@media (min-width:861px){
+  html,body{height:100%}
+  body{overflow:hidden;padding-block:12px}
+  .wrap{height:100%;max-width:1680px;gap:10px}
+  header{flex:none}
+  h1{font-size:30px}
+  header .sub{font-size:13.5px;max-width:120ch}
+  .main{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 370px;align-items:stretch}
+  .stage{height:100%}
+  canvas#cv{height:100%}
+  aside{height:100%;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-width:thin;scrollbar-gutter:stable}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Ford circles</h1>
+  <p class="sub">Every fraction <span class="mono">p/q</span> gets a circle sitting on the number line with radius <span class="mono">1/(2q²)</span>. No two overlap. Two are tangent exactly when <span class="mono">|ps − qr| = 1</span>. Drag to pan, scroll or pinch to zoom as deep as you like, tap a circle to inspect it.</p>
+</header>
+
+<div class="main">
+  <div class="stage">
+    <canvas id="cv" aria-label="Ford circles, zoomable"></canvas>
+    <div class="view" id="viewInfo"></div>
+    <div class="hud">
+      <button type="button" id="zIn" aria-label="Zoom in">+</button>
+      <button type="button" id="zOut" aria-label="Zoom out">−</button>
+      <button type="button" id="home">Reset view</button>
+    </div>
+  </div>
+
+  <aside>
+    <div class="card">
+      <h2>Selected circle</h2>
+      <div id="selBox"></div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Panels"></nav>
+
+    <div class="card" data-tab="num">
+      <h2>Chase a number</h2>
+      <div class="inline"><input type="text" id="num" value="pi" aria-label="Number or expression"><button class="btn primary" type="button" id="go">Trace</button></div>
+      <div class="chips" id="presets">
+        <button class="chip" data-v="pi">π</button><button class="chip" data-v="phi">φ</button><button class="chip" data-v="e">e</button><button class="chip" data-v="sqrt(2)">√2</button><button class="chip" data-v="sqrt(3)">√3</button><button class="chip" data-v="2^(1/3)">∛2</button>
+      </div>
+      <div class="err" id="numErr"></div>
+      <div class="cf" id="cfOut"></div>
+      <div class="lbl">Convergents, tap to fly there</div>
+      <div class="chips" id="convs"></div>
+      <div class="convnav" id="convNav" hidden><button class="btn" type="button" id="cPrev">◂ Previous</button><span id="cStat"></span><button class="btn" type="button" id="cNext">Next ▸</button></div>
+      <p class="sub note" id="numNote"></p>
+      <div class="toggles"><label><input type="checkbox" id="semi"> Show intermediate fractions</label></div>
+    </div>
+
+    <div class="card" data-tab="display">
+      <h2>Display</h2>
+      <div class="row"><label for="qmax">Max denominator</label><input type="range" id="qmax" min="1" max="401" value="401"><output id="qmaxOut"></output></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="labels" checked> Fraction labels</label>
+        <label><input type="checkbox" id="tangents" checked> Mark tangencies</label>
+        <label><input type="checkbox" id="farey"> Farey neighbours</label>
+      </div>
+      <div class="legend"><span>q = 1</span><div class="ramp" id="ramp"></div><span id="rampMax"></span></div>
+    </div>
+
+    <div class="card" data-tab="zaremba">
+      <h2>Obstruction lab</h2>
+      <p class="sub note">Choose which continued fractions are allowed: any number of digits from the first set, then optionally one digit from the second, then a fixed tail. The lab finds every denominator up to N that never appears and sorts the misses: ruled out by a congruence, part of a missing power family like n² (where reciprocity obstructions show up), or sporadic.</p>
+      <div class="chips" id="labPresets"></div>
+      <div class="labf">
+        <label for="labA">Digits, repeated</label><input type="text" id="labA" value="1-5" spellcheck="false">
+        <label for="labB">Then one digit</label><input type="text" id="labB" value="" placeholder="none" spellcheck="false">
+        <label for="labT">Fixed tail</label><input type="text" id="labT" value="" placeholder="none" spellcheck="false">
+        <label for="labN">Up to N</label><select id="labN"><option value="10000">10,000</option><option value="100000" selected>100,000</option><option value="1000000">1,000,000</option><option value="10000000">10,000,000</option><option value="50000000">50,000,000</option></select>
+      </div>
+      <p class="sub note" id="labHint">Digits: <span class="mono">1-5</span>, <span class="mono">1,2,4</span>, <span class="mono">4,8,...,128</span>, <span class="mono">4n</span> for all multiples of 4, <span class="mono">n</span> for any digit.</p>
+      <div class="err" id="labErr"></div>
+      <div class="inline"><button class="btn primary" type="button" id="labRun">Run</button><button class="btn" type="button" id="labStop" disabled>Stop</button><span class="note" id="labProg" style="align-self:center;color:var(--dim)"></span></div>
+      <div class="toggles"><label><input type="checkbox" id="labFilter"> Show only these fractions in the picture</label><label><input type="checkbox" id="ghost" checked> Show the rest faintly</label></div>
+      <dl id="zStats"></dl>
+      <dl id="labStats"></dl>
+      <div class="rtwrap" id="labFamWrap" hidden><table class="rt" id="labFam"></table></div>
+      <div class="cf" id="labSpor"></div>
+      <div id="labMapWrap" hidden>
+        <div class="row"><label for="labW">Map: integers per row</label><select id="labW"><option>24</option><option>60</option><option selected>120</option><option>240</option><option>360</option><option>720</option></select><span></span></div>
+        <div class="row"><label for="labStart">Start at</label><input type="range" id="labStart" min="0" max="0" value="0"><output id="labStartOut">1</output></div>
+        <canvas class="mini" id="labMap" style="height:240px;image-rendering:pixelated" aria-label="Map of missing denominators"></canvas>
+        <div class="legend" style="flex-wrap:wrap;gap:4px 12px"><span><i class="sw" style="background:var(--line)"></i>appears</span><span><i class="sw" style="background:var(--dim)"></i>congruence</span><span><i class="sw" style="background:var(--tan)"></i>power family</span><span><i class="sw" style="background:var(--conv)"></i>sporadic</span></div>
+        <p class="sub note mono" id="labHover" style="min-height:1.4em"></p>
+      </div>
+      <details id="scanBox" class="scan">
+        <summary>Batch scan</summary>
+        <p class="sub note">Runs many families automatically and lists the ones where a power family is missing far more often than chance allows. Families already explained by a known theorem are labelled.</p>
+        <div class="labf">
+          <label for="scanType">Families</label><select id="scanType"><option value="sub">Subsets of {1,…,K}</option><option value="mult">Multiples of s, for s = 2…S</option><option value="custom">Custom list</option></select>
+          <label for="scanK" class="scSub">K</label><input class="scSub" type="number" id="scanK" value="8" min="2" max="24">
+          <label for="scanSz" class="scSub">Sizes</label><input class="scSub" type="text" id="scanSz" value="2-3">
+          <label for="scanS" class="scMult" hidden>S</label><input class="scMult" type="number" id="scanS" value="12" min="2" max="60" hidden>
+          <label for="scanMid">Middle digit</label><select id="scanMid"><option value="both">none and any</option><option value="none">none</option><option value="any">any</option></select>
+          <label for="scanTails">Tails</label><input type="text" id="scanTails" value="-; 1; 2; 3; 5; 1,1; 1,2; 2,1; 1,1,2" spellcheck="false">
+          <label for="scanN">Up to N</label><select id="scanN"><option value="30000">30,000</option><option value="100000" selected>100,000</option><option value="300000">300,000</option><option value="1000000">1,000,000</option></select>
+          <label for="scanCap">Node cap / run</label><select id="scanCap"><option value="5000000">5 million</option><option value="30000000" selected>30 million</option><option value="200000000">200 million</option></select>
+        </div>
+        <textarea id="scanCustom" rows="4" hidden spellcheck="false" placeholder="digits | one digit | tail, one family per line&#10;2n | n | 3&#10;4,8,...,128 | | 1,1,2"></textarea>
+        <div class="inline"><button class="btn primary" type="button" id="scanRun">Run scan</button><button class="btn" type="button" id="scanStop" disabled>Stop</button><span class="note" id="scanProg" style="align-self:center;color:var(--dim)"></span></div>
+        <div id="scanOut"></div>
+      </details>
+    </div>
+
+    <div class="card" data-tab="orbit">
+      <h2>Semigroup orbits</h2>
+      <p class="sub note">A semigroup of matrices acting on a starting vector <span class="mono">(x, y)</span>. With <span class="mono">L = (1 1; 0 1)</span> and <span class="mono">R = (1 0; 1 1)</span>, <span class="mono">⟨L, R⁴⟩</span> is Rickards–Stange's Ψ₁ and <span class="mono">⟨L⁴, R⁴⟩</span> is Ψ₂; Ψ is their full Kronecker-preserving semigroup (Lemma 4.1). The lab lists every numerator or denominator up to N and sorts the misses as above.</p>
+      <div class="chips" id="orbPresets"></div>
+      <div class="labf">
+        <label for="orbKind">Semigroup</label><select id="orbKind"><option value="gen">⟨Lᵖ, Rʳ⟩</option><option value="psi">Ψ (Kronecker)</option></select>
+        <label for="orbP" class="orbGen">p, r</label><span class="orbGen pair"><input type="number" id="orbP" value="1" min="1" max="64" aria-label="p"><input type="number" id="orbR" value="4" min="1" max="64" aria-label="r"></span>
+        <label for="orbX">Start (x, y)</label><span class="pair"><input type="number" id="orbX" value="2" min="1" aria-label="x"><input type="number" id="orbY" value="3" min="1" aria-label="y"></span>
+        <label for="orbC">Count</label><select id="orbC"><option value="num">numerators</option><option value="den">denominators</option></select>
+        <label for="orbN">Up to N</label><select id="orbN"><option value="10000">10,000</option><option value="100000" selected>100,000</option><option value="1000000">1,000,000</option><option value="10000000">10,000,000</option></select>
+      </div>
+      <div class="err" id="orbErr"></div>
+      <div class="inline"><button class="btn primary" type="button" id="orbRun">Run</button><button class="btn" type="button" id="orbStop" disabled>Stop</button><span class="note" id="orbProg" style="align-self:center;color:var(--dim)"></span></div>
+      <dl id="orbStats"></dl>
+      <div class="rtwrap" id="orbFamWrap" hidden><table class="rt" id="orbFam"></table></div>
+      <div class="cf" id="orbSpor"></div>
+      <div class="lbl">Check one number</div>
+      <div class="inline"><input type="text" id="orbOne" value="10570" spellcheck="false" aria-label="Number to check"><button class="btn" type="button" id="orbOneGo">Check</button></div>
+      <div class="cf" id="orbOneOut"></div>
+      <div class="lbl">Range scan, past N</div>
+      <p class="sub note">Tests every non-square in a range directly, with no memory limit, and lists the ones that never appear. Found values are not stored, only misses.</p>
+      <div class="inline"><input type="text" id="orbLo" value="10570" spellcheck="false" aria-label="From"><input type="text" id="orbHi" value="1000000" spellcheck="false" aria-label="To"><button class="btn primary" type="button" id="orbScanGo">Scan</button><button class="btn" type="button" id="orbScanStop" disabled>Stop</button></div>
+      <span class="note" id="orbScanProg" style="color:var(--dim)"></span>
+      <div class="cf" id="orbScanOut"></div>
+    </div>
+
+    <div class="card" data-tab="markov">
+      <h2>Markov and Lagrange</h2>
+      <p class="sub note">The dashed line above your number is a hyperbolic geodesic. Its Lagrange value <span class="mono">L = limsup 1/(q²·|x − p/q|)</span> measures how deep it keeps cutting into circles. Hurwitz's √5 is the bottom of the spectrum.</p>
+      <div class="lbl">Markov numbers, tap to trace</div>
+      <div class="chips" id="mkChips"></div>
+      <dl id="lgStats"><dt>Trace a number</dt><dd>to see its Lagrange value</dd></dl>
+      <div class="lbl">Where it sits in the spectrum</div>
+      <canvas class="mini" id="spec" style="height:78px" aria-label="Lagrange spectrum"></canvas>
+      <div class="lbl">Its geodesic on the modular surface</div>
+      <canvas class="mini" id="geo" style="height:200px" aria-label="Geodesic on the modular surface"></canvas>
+      <p class="sub note" id="geoNote"></p>
+    </div>
+
+    <div class="card" data-tab="rsa">
+      <h2>Wiener's attack on RSA</h2>
+      <p class="sub note">If the private exponent <span class="mono">d</span> is below about <span class="mono">N^¼/3</span>, then <span class="mono">k/d</span> is a convergent of <span class="mono">e/N</span>. The key is one of the circles on the trail.</p>
+      <div class="row"><label for="wBits">Modulus</label><select id="wBits"><option value="256">256-bit N</option><option value="512" selected>512-bit N</option><option value="1024">1024-bit N</option><option value="2048">2048-bit N</option></select><span></span></div>
+      <div class="toggles"><label><input type="checkbox" id="wBig"> Make d too big (≈ N^0.29)</label></div>
+      <div class="inline"><button class="btn" type="button" id="wGen">New key</button><button class="btn primary" type="button" id="wRun" disabled>Attack</button></div>
+      <dl id="wKey"></dl>
+      <div class="steps" id="wSteps"></div>
+      <p class="sub note" id="wNote"></p>
+    </div>
+
+    <div class="card" data-tab="rad">
+      <h2>Rademacher's path</h2>
+      <p class="sub note">Rademacher's exact formula for the partition numbers <span class="mono">p(n)</span> comes from integrating along the tops of the Ford circles of order <span class="mono">N</span>. Each denominator <span class="mono">k</span> contributes one term.</p>
+      <div class="toggles"><label><input type="checkbox" id="rShow"> Draw the path</label></div>
+      <div class="row"><label for="rN">Farey order N</label><input type="range" id="rN" min="1" max="24" value="5"><output id="rNOut">5</output></div>
+      <div class="row"><label for="rNum">p(n), n =</label><input type="number" id="rNum" min="1" max="2000" value="100"><span></span></div>
+      <dl id="rStats"></dl>
+      <div class="rtwrap"><table class="rt" id="rTab"></table></div>
+    </div>
+    <div class="card" data-tab="about"><div class="lbl">Area check</div><div class="big" id="area"></div><p>Total area of the circles for fractions in (0, 1], up to the current max denominator (400 when it's set to ∞). As <b>q → ∞</b> it tends to <b>(π/4)·ζ(3)/ζ(4) ≈ 0.8723</b>, so about 13% of the unit square under the curve stays uncovered forever.</p></div>
+    <div class="card" data-tab="about"><div class="lbl">Mediants</div><p>Between two tangent circles <b>a/b</b> and <b>c/d</b>, the biggest circle squeezed into the gap is always the mediant <b>(a+c)/(b+d)</b>. Select a circle and its two Farey parents are the circles it nests between.</p></div>
+    <div class="card" data-tab="about"><div class="lbl">Hurwitz</div><p>Every irrational <b>x</b> has infinitely many <b>p/q</b> with <b>|x − p/q| &lt; 1/(√5·q²)</b>, and √5 is the best constant. The golden ratio is the worst case, which is why its convergents crawl in so slowly.</p></div>
+  </aside>
+</div>
+
+</div>
+</div>
+
+<script id="engineSrc">
+/* Obstruction-lab engine. Runs in a Web Worker (and in Node for tests).
+   Family: fractions [0; w, b, t1..tr] with every digit of w in A (any length, possibly empty),
+   b one digit from B (omitted if B is empty), then the fixed tail t.
+   Digit sets: {fin:[...sorted ints]} or {mult:s} (all positive multiples of s). */
+function digitsUpTo(S,limit){ // digits d in S with d<=limit
+  if(S.mult){const out=[];for(let d=S.mult;d<=limit;d+=S.mult)out.push(d);return out}
+  return S.fin.filter(d=>d<=limit)}
+function makeEnum(spec,N){
+  const A=spec.A,B=spec.B,tail=spec.tail||[],hasB=!!B;
+  const seen=new Uint8Array(N+1);
+  const finA=A.fin||null,sA=A.mult||0,bList=hasB&&B.fin?B.fin:null,sB=hasB&&B.mult?B.mult:0;
+  const finish=(x,y)=>{for(let i=0;i<tail.length;i++){const ny=tail[i]*y+x;x=y;y=ny;if(y>N)return}if(y<=N&&seen[y]<255)seen[y]++};
+  const emit=(x,y)=>{if(!hasB){finish(x,y);return}
+    if(bList){for(const b of bList){const ny=b*y+x;if(ny>N)break;finish(y,ny)}}
+    else{for(let b=sB;;b+=sB){const ny=b*y+x;if(ny>N)break;finish(y,ny)}}};
+  const stX=[0],stY=[1];
+  const E={seen,nodes:0,done:false,step(budget){let n=0;
+    while(stX.length&&n<budget){const x=stX.pop(),y=stY.pop();n++;emit(x,y);
+      if(finA){for(const a of finA){const ny=a*y+x;if(ny>N)break;stX.push(y);stY.push(ny)}}
+      else if(sA){for(let a=sA;;a+=sA){const ny=a*y+x;if(ny>N)break;stX.push(y);stY.push(ny)}}}
+    E.nodes+=n;E.done=!stX.length;return E.done}};
+  return E}
+function enumerateDen(spec,N){const E=makeEnum(spec,N);while(!E.step(1e7));return E}
+
+/* admissible residues of the final denominator mod m: transitions (x,y)->(y,a y+x) are bijections of (Z/m)^2,
+   so the reachable set from (0,1) is closed and every state recurs. */
+function residues(S,m){const r=new Set();if(S.mult){for(let k=1;k<=m;k++)r.add((S.mult*k)%m)}else for(const d of S.fin)r.add(d%m);return [...r]}
+function admissible(spec,m){if(spec.orb)return orbAdmissible(orbNorm(spec),m);
+  const ra=residues(spec.A,m),seen=new Uint8Array(m*m),q=[0*m+1];seen[1]=1;
+  if(spec.A.fin&&!spec.A.fin.length){}else
+  for(let i=0;i<q.length;i++){const s=q[i],x=(s/m)|0,y=s%m;for(const a of ra){const ny=(a*y+x)%m,ns=y*m+ny;if(!seen[ns]){seen[ns]=1;q.push(ns)}}}
+  let states=q;
+  if(spec.B){const rb=residues(spec.B,m),nxt=new Set();for(const s of states){const x=(s/m)|0,y=s%m;for(const b of rb)nxt.add(y*m+(b*y+x)%m)}states=[...nxt]}
+  const out=new Uint8Array(m);
+  for(const s of states){let x=(s/m)|0,y=s%m;for(const t of spec.tail||[]){const ny=(t*y+x)%m;x=y;y=ny}out[y]=1}
+  return out}
+const MODS=[2,3,4,5,7,8,9,11,13,16,17,19,23,24,25,27,29,31,32,37,48,49,64,72,96,120];
+function classify(spec,seen,N){
+  const adm=MODS.map(m=>[m,admissible(spec,m)]).filter(([m,a])=>a.some(v=>!v));
+  const congr=q=>{for(const [m,a] of adm)if(!a[q%m])return m;return 0};
+  const isAdm=new Uint8Array(N+1);let nAdm=0,nPresent=0,nMissAdm=0,nCong=0;
+  for(let q=1;q<=N;q++){const c=congr(q);if(c){if(!seen[q])nCong++;continue}isAdm[q]=1;nAdm++;if(seen[q])nPresent++;else nMissAdm++}
+  // power families u*n^d (d = 2, 3, 4)
+  const fams=[];const SQF=[1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23,26,29,30];
+  for(const u of SQF)fams.push([u,2]);for(const u of [1,2,3,4,6,9])fams.push([u,3]);for(const u of [1,4,9,36])fams.push([u,4]);
+  const lo=Math.max(2,Math.floor(N/100));
+  // miss rate per residue class mod 120 among admissible numbers in the top range: the expectation for a family
+  // is built from these, so families that just live in thin classes are not flagged
+  // the baseline modulus includes every prime dividing all the digits, since those primes shape the residues heavily
+  const gd=spec.orb?1:spec.A.mult?spec.A.mult:spec.A.fin.reduce((g,d)=>{let a=g,b=d;while(b){[a,b]=[b,a%b]}return a},0);
+  let rad=1;{let g=gd;for(let p=2;p*p<=g;p++)if(g%p===0){if(720%p)rad*=p;while(g%p===0)g/=p}if(g>1&&720%g)rad*=g}
+  let bm=N>=60000?720:120;while(bm>1&&N/(bm*rad)<40)bm=bm%5===0?bm/5:bm%3===0?bm/3:bm/2;const M=bm*rad;
+  // Several baselines: the composite modulus M, plus each prime (and small prime power) up to 47 on its own.
+  // A family's expected count is the smallest over all of them, so thin classes mod any one of these never fake a hit.
+  const MODB=[M,7,11,13,17,19,23,29,31,37,41,43,47,25,27,49,32,64];
+  const rates=MODB.map(m=>{const A2=new Float64Array(m),M2=new Float64Array(m);return [m,A2,M2]});
+  let bA=0,bM=0;
+  for(let q=lo;q<=N;q++)if(isAdm[q]){bA++;const miss=!seen[q];if(miss)bM++;for(const [m,A2,M2] of rates){const r=q%m;A2[r]++;if(miss)M2[r]++}}
+  const base=bA?bM/bA:0;
+  const famStats=[];
+  for(const [u,d] of fams){let adm=0,pres=0,admHi=0,presHi=0;const ex=new Float64Array(rates.length);
+    for(let n=1;;n++){const v=u*Math.pow(n,d);if(v>N)break;if(!isAdm[v])continue;adm++;if(seen[v])pres++;
+      if(v>=lo){admHi++;if(seen[v])presHi++;for(let i=0;i<rates.length;i++){const [m,A2,M2]=rates[i],r=v%m;ex[i]+=1-(A2[r]?M2[r]/A2[r]:base)}}}
+    if(adm)famStats.push({u,d,adm,pres,admHi,presHi,expect:Math.min(...ex)})}
+  for(const f of famStats){f.missHi=f.admHi?(f.admHi-f.presHi)/f.admHi:0;
+    f.status=f.presHi===0&&f.expect>=8?'obstructed':f.admHi>=10&&f.expect>=12&&f.presHi<=f.expect/4?'suspicious':'normal'}
+  const sqObst=famStats.find(f=>f.u===1&&f.d===2&&f.status==='obstructed');
+  for(const f of famStats)if(f.d===4&&f.status!=='normal'){const r=Math.round(Math.sqrt(f.u));if(r*r===f.u&&sqObst)f.status='subsumed'}
+  for(const f of famStats)if(f.d===4&&f.status!=='normal'){const p=famStats.find(g=>g.d===2&&g.status==='obstructed'&&Number.isInteger(Math.sqrt(f.u/g.u)));if(p)f.status='subsumed'}
+  const obst=famStats.filter(f=>f.status==='obstructed');
+  const inFam=q=>{for(const f of obst){const r=q/f.u;if(r!==Math.floor(r))continue;const n=Math.round(Math.pow(r,1/f.d));for(const k of [n-1,n,n+1])if(k>0&&Math.pow(k,f.d)===r)return f}return null};
+  const cls=new Uint8Array(N+1); // 0 present,1 congruence,2 family,3 sporadic
+  let nFam=0;const spor=[];
+  for(let q=1;q<=N;q++){if(seen[q])continue;if(!isAdm[q]){cls[q]=1;continue}if(inFam(q)){cls[q]=2;nFam++}else{cls[q]=3;spor.push(q)}}
+  // missing-rate profile by bucket (sporadic only)
+  const buckets=[];const nb=20;for(let i=0;i<nb;i++){const a=Math.floor(N*i/nb)+1,b=Math.floor(N*(i+1)/nb);let ad=0,sp=0;for(let q=a;q<=b;q++){if(isAdm[q])ad++;if(cls[q]===3)sp++}buckets.push(ad?sp/ad:0)}
+  const am=new Map(adm);const essential=adm.filter(([m,a])=>!adm.some(([d,b])=>d<m&&m%d===0&&a.every((v,r)=>v===b[r%d])));
+  return {mods:essential.map(([m,a])=>[m,[...a].reduce((s,v)=>s+v,0),[...a].map((v,r)=>v?r:-1).filter(r=>r>=0)]),nAdm,nPresent,nMissAdm,nCong,famStats,base,nFam,spor,cls,buckets}}
+
+function scanOne(spec,N,cap){const E=makeEnum(spec,N);while(!E.step(2e6)){if(E.nodes>cap)return {spec,N,capped:true,nodes:E.nodes}}
+  const c=classify(spec,E.seen,N);const flagged=c.famStats.filter(f=>f.status==='obstructed'||f.status==='suspicious').map(f=>({u:f.u,d:f.d,admHi:f.admHi,presHi:f.presHi,expect:+f.expect.toFixed(1),status:f.status}));
+  const dim=spec.A.fin&&spec.A.fin.length>1&&spec.A.fin.length<=60?dimension(spec.A.fin,24):null;
+  return {spec,N,nodes:E.nodes,cov:c.nAdm?c.nPresent/c.nAdm:0,mods:c.mods.map(x=>[x[0],x[1]]),flagged,nSpor:c.spor.length,dim}}
+function rsType(spec){const A=spec.A;return A.mult?A.mult%4===0:A.fin.every(d=>d%4===0)}
+/* Hausdorff dimension of E_A for finite A: leading eigenvalue of the transfer operator
+   L_s f(x) = sum_a (a+x)^(-2s) f(1/(a+x)) on [0,1], Chebyshev collocation, bisection on s. */
+function dimension(fin,nodes=32){
+  if(!fin.length)return 0;if(fin.length===1)return 0;
+  const n=nodes,xs=[],w=[];for(let j=0;j<n;j++){const t=Math.cos(Math.PI*(2*j+1)/(2*n));xs.push((t+1)/2);w.push((j%2?-1:1)*Math.sin(Math.PI*(2*j+1)/(2*n)))}
+  const interpRow=y=>{const r=new Float64Array(n);for(let k=0;k<n;k++)if(Math.abs(y-xs[k])<1e-15){r[k]=1;return r}let s=0;for(let k=0;k<n;k++){r[k]=w[k]/(y-xs[k]);s+=r[k]}for(let k=0;k<n;k++)r[k]/=s;return r};
+  const rows=[];for(let j=0;j<n;j++)for(const a of fin){rows.push([j,Math.log(a+xs[j]),interpRow(1/(a+xs[j]))])}
+  const lam=s=>{const M=[];for(let j=0;j<n;j++)M.push(new Float64Array(n));for(const [j,lg,r] of rows){const c=Math.exp(-2*s*lg);for(let k=0;k<n;k++)M[j][k]+=c*r[k]}
+    let v=new Float64Array(n).fill(1),l=0;for(let it=0;it<400;it++){const u=new Float64Array(n);for(let j=0;j<n;j++){let t=0;for(let k=0;k<n;k++)t+=M[j][k]*v[k];u[j]=t}let mx=0;for(const x of u)mx=Math.max(mx,Math.abs(x));const nl=mx;v=u.map(x=>x/mx);if(Math.abs(nl-l)<1e-15*nl){l=nl;break}l=nl}return l};
+  let lo=0,hi=1;for(let i=0;i<52;i++){const m=(lo+hi)/2;if(lam(m)>1)lo=m;else hi=m}return (lo+hi)/2}
+
+/* ---------- Semigroup orbits (Rickards–Stange Psi, Psi_1 = <L,R^4>, Psi_2 = <L^4,R^4>, ...) ----------
+   L = [[1,1],[0,1]], R = [[1,0],[1,1]]. An orbit spec is {orb:true, kind:'gen'|'psi', p, r, x, y, coord:'num'|'den'}.
+   'gen' is the semigroup <L^p, R^r>; 'psi' is Rickards–Stange's Psi = {M in Gamma_1(4)>=0 : (a/b) = 1}.
+   Denominators of <L^p,R^r>(x,y) are the numerators of <L^r,R^p>(y,x) (conjugate by the swap J), so the
+   engine only ever works with numerators of 'gen' orbits. */
+function kron(a,n){ // Kronecker symbol (a/n), a,n >= 0
+  if(n===0)return a===1?1:0;if(a%2===0&&n%2===0)return 0;let r=1;
+  while(n%2===0){n/=2;const m=a%8;if(m===3||m===5)r=-r}
+  a%=n;while(a){while(a%2===0){a/=2;const m=n%8;if(m===3||m===5)r=-r}const t=a;a=n;n=t;if(a%4===3&&n%4===3)r=-r;a%=n}
+  return n===1?r:0}
+function orbNorm(s){ // reduce a 'gen' spec to a numerator problem
+  if(s.kind==='gen'&&s.coord==='den')return {kind:'gen',p:s.r,r:s.p,x:s.y,y:s.x,coord:'num',swapped:true};
+  return {...s,swapped:false}}
+/* Top row (a,b) of some element of <L^p,R^r>? Every M in SL(2,Z)>=0 with top row (a,b) is
+   R^k L^{t_{2m-1}} R^{t_{2m-2}} ... L^{t_1} R^{t_0}, where a/b = [t_0; t_1, ..., t_{2m-1}] is the even
+   continued fraction; <L,R> is free, so M is in <L^p,R^r> iff the R exponents (even indices) are = 0 mod r and the
+   L exponents (odd indices) are = 0 mod p, k being free. Returns the even CF terms, or null. */
+function topRowCF(a,b,p,r){
+  if(b===0)return a===1?[]:null;if(a===0)return null; // no non-negative matrix has top row (0,b)
+  const t=[];let x=a,y=b;while(y){const q=Math.floor(x/y),rm=x-q*y;t.push(q);x=y;y=rm}
+  if(x!==1)return null;
+  if(t.length%2){t[t.length-1]-=1;t.push(1)}
+  for(let i=0;i<t.length;i++)if(t[i]%(i%2?p:r))return null;
+  return t}
+function egcd(a,b){let [r0,r1,s0,s1]=[a,b,1,0];while(r1){const q=Math.floor(r0/r1);[r0,r1]=[r1,r0-q*r1];[s0,s1]=[s1,s0-q*s1]}return [r0,s0]}
+/* Witness for n in a normalized spec: returns {a,b,cf} ('gen') or {u,v} ('psi'), or null; tries counts candidates. */
+function orbWitness(ns,n){
+  const {x,y}=ns;let tries=0;
+  // solutions of a*x + b*y = n with a,b >= 0: b = b0 (mod x)
+  let b0=0;if(x>1){const [g,s]=egcd(y%x,x);if(g!==1)return {tries:0};b0=((n%x)*(((s%x)+x)%x))%x}
+  if(ns.kind==='gen'){
+    for(let b=b0;b*y<=n;b+=x){const a=(n-b*y)/x;tries++;const cf=topRowCF(a,b,ns.p,ns.r);if(cf)return {a,b,cf,tries}}
+    return {tries}}
+  // psi, Lemma 4.1: numerator: u = 1 (mod 4), u x + v y = n, (u/v) = 1; denominator: u = 0, v = 1 (mod 4)
+  for(let v=b0;v*y<=n;v+=x){const u=(n-v*y)/x;tries++;
+    if(ns.coord==='num'){if(u%4!==1)continue}else{if(u%4!==0||v%4!==1)continue}
+    if(kron(u,v)===1)return {u,v,tries}}
+  return {tries}}
+/* Exact enumeration of numerators of <L^p,R^r>(x,y) up to N: walk top rows from (1,0), right-multiplying by L^p
+   ((a,b) -> (a, b+pa)) or R^r ((a,b) -> (a+rb, b), skipped at b = 0 where it fixes the row). Each top row is
+   reached once; values a x + b y only grow, so the walk is finite. */
+function makeOrbEnum(ns,N){
+  const seen=new Uint8Array(N+1),{p,r,x,y}=ns;const sa=[1],sb=[0];
+  if(ns.kind==='psi'){let n=1;const E={seen,nodes:0,done:false,step(budget){let k=0;while(n<=N&&k<budget){const w=orbWitness(ns,n);E.nodes+=w.tries;if(w.u!==undefined)seen[n]=1;n++;k++}E.done=n>N;return E.done}};return E}
+  const E={seen,nodes:0,done:false,step(budget){let k=0;
+    while(sa.length&&k<budget){const a=sa.pop(),b=sb.pop();k++;const v=a*x+b*y;if(v>N)continue;seen[v]=1;
+      sa.push(a);sb.push(b+p*a);if(b>0){sa.push(a+r*b);sb.push(b)}}
+    E.nodes+=k;E.done=!sa.length;return E.done}};
+  return E}
+/* residues of the coordinate mod m: the orbit of (x,y) mod m under the generators (bijections of (Z/m)^2).
+   Psi has the same congruence obstructions as Gamma_1(4) (strong approximation, Prop. 2.7), generated by L and R^4. */
+function orbAdmissible(ns,m){const p=ns.kind==='psi'?1:ns.p,r=ns.kind==='psi'?4:ns.r;
+  const seen=new Uint8Array(m*m),q=[(ns.x%m)*m+ns.y%m];seen[q[0]]=1;
+  for(let i=0;i<q.length;i++){const s=q[i],a=(s/m)|0,b=s%m;for(const ns2 of [((a+p*b)%m)*m+b,a*m+(r*a+b)%m])if(!seen[ns2]){seen[ns2]=1;q.push(ns2)}}
+  const out=new Uint8Array(m);const den=ns.kind==='psi'&&ns.coord==='den';for(const s of q)out[den?s%m:(s/m)|0]=1;return out}
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+const LOG2=Math.log10(2),TB=3400,ONE=1n<<BigInt(TB);
+let W=0,H=0,dpr=1,BASE=26;
+let L=0,P=64,C=0n,yOff=0;
+let zA=0,zCounts=[0,0],tgtTerms=null;
+let sel=null,tgt=null,convs=[],semis=[],convIdx=-1,vis=[],anim=null,dirty=true;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const STOPS=[[47,91,224],[29,158,140],[217,170,43],[214,96,58],[194,65,122]];
+function col(t){t=Math.max(0,Math.min(1,t))*(STOPS.length-1);const i=Math.min(STOPS.length-2,Math.floor(t)),f=t-i,a=STOPS[i],b=STOPS[i+1];return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f].map(Math.round)}
+$('ramp').style.background='linear-gradient(90deg,'+STOPS.map(c=>'rgb('+c.join(',')+')').join(',')+')';
+
+/* ---------- BigInt helpers ---------- */
+const babs=x=>x<0n?-x:x;
+function bl(x){x=babs(x);return x===0n?0:x.toString(16).length*4}
+function blog10(x){x=babs(x);if(x===0n)return -Infinity;const b=bl(x);if(b<=1000)return Math.log10(Number(x));const sh=b-80;return Math.log10(Number(x>>BigInt(sh)))+sh*LOG2}
+function pow10Big(lg){if(lg<15)return BigInt(Math.max(1,Math.floor(Math.pow(10,lg))));const ip=Math.floor(lg)-15;return BigInt(Math.floor(Math.pow(10,lg-ip)))*10n**BigInt(ip)}
+function ceilDiv(a,b){if(b<0n){a=-a;b=-b}return a>=0n?(a+b-1n)/b:-((-a)/b)}
+function floorDiv(a,b){if(b<0n){a=-a;b=-b}return a>=0n?a/b:-((-a+b-1n)/b)}
+function bgcd(a,b){a=babs(a);b=babs(b);while(b){[a,b]=[b,a%b]}return a}
+function modinv(a,m){a=((a%m)+m)%m;let g=m,x=0n,g1=a,x1=1n;while(g1){const k=g/g1;[g,g1]=[g1,g-k*g1];[x,x1]=[x1,x-k*x1]}return ((x%m)+m)%m}
+function decStr(n,d,digits){const neg=(n<0n)!==(d<0n)&&n!==0n;n=babs(n);d=babs(d);const ip=n/d;let fr=((n%d)*10n**BigInt(digits))/d;let s=fr.toString().padStart(digits,'0').replace(/0+$/,'');return (neg?'−':'')+ip.toString()+(s?'.'+s:'')}
+function fmtExp(lg){if(!isFinite(lg))return '0';const e=Math.floor(lg),m=Math.pow(10,lg-e);return e>=-3&&e<6?Math.pow(10,lg).toPrecision(4):m.toFixed(3)+'×10'+sup(e)}
+function sup(n){return String(n).replace(/-/g,'⁻').replace(/\d/g,c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[c])}
+function shortInt(x){const s=x.toString();return s.length<=14?s:s.slice(0,6)+'…'+s.slice(-6)+' ('+s.length+' digits)'}
+
+/* ---------- view math ---------- */
+function setP(np){if(np===P)return;C=np>P?C<<BigInt(np-P):C>>BigInt(P-np);P=np}
+const wantP=l=>Math.max(64,Math.ceil(l/LOG2)+80);
+function pxToFix(dx){const e=P-L/LOG2;if(e<900)return BigInt(Math.round(dx*Math.pow(2,e)));const k=Math.floor(e)-120;return BigInt(Math.round(dx*Math.pow(2,e-k)))<<BigInt(k)}
+const B1000=1n<<1000n;
+function flog10(x){if(x<0n)x=-x;return x<B1000?Math.log10(Number(x)):blog10(x)}
+function offPx(p,q){const num=(p<<BigInt(P))-C*q;if(num===0n)return 0;const Lb=L/LOG2,fl=Math.floor(Lb),s=P-fl-30;
+  if(s<0)return offPxLog(num,q);const r=num/(q<<BigInt(s));if(r>B1000||r<-B1000)return num>0n?1e300:-1e300;const v=Number(r)*Math.pow(2,Lb-fl-30);return v>1e300?1e300:v<-1e300?-1e300:v}
+function offPxLog(num,q){const lg=blog10(num)-blog10(q)-P*LOG2+L;if(lg>300)return num>0n?1e300:-1e300;return (num>0n?1:-1)*Math.pow(10,lg)}
+function rPx(q){const lg=L-LOG2-2*flog10(q);return lg>300?1e300:Math.pow(10,lg)}
+const baseY=()=>H-BASE+yOff;
+
+/* ---------- enumeration by Stern–Brocot descent ---------- */
+let sbPath=[];
+/* Each fraction travels as [p, q, p·2^P − x0·q, p·2^P − x1·q]. These are linear in (p, q),
+   so mediants and jumps are plain additions and the loop never multiplies by the huge window ends. */
+function enumerate(x0,x1,Q){
+  const sP=BigInt(P),mk=(p,q)=>{const t=p<<sP;return [p,q,t-x0*q,t-x1*q]};
+  const out=[],seen=new Map(),add=E=>{if(E[1]<=Q||E[1]===1n){let m=seen.get(E[1]);if(!m){m=new Set();seen.set(E[1],m)}if(!m.has(E[0])){m.add(E[0]);out.push([E[0],E[1],(E[2]+E[3])>>1n])}}};
+  const ax=(A,B,k)=>[A[0]+k*B[0],A[1]+k*B[1],A[2]+k*B[2],A[3]+k*B[3]];
+  const TWO=1n<<sP,n0=floorDiv(x0,TWO)-1n,n1=floorDiv(x1,TWO)+2n;
+  if(n1-n0>2000n)return [];
+  const st=[];
+  if(n1-n0===3n){
+    const n=n0+1n,cmp=(p,q,X)=>{const d=(p<<sP)-X*q;return d>0n?1:d<0n?-1:0},inside=nd=>nd[3]<=Q&&nd[1]<=Q&&cmp(nd[0],nd[1],x0)<0&&cmp(nd[2],nd[3],x1)>0;
+    if(!sbPath.length||sbPath[0][0]!==n||sbPath[0][1]!==1n)sbPath=[[n,1n,n+1n,1n]];
+    let lo=0,hi=sbPath.length-1;if(!inside(sbPath[0])){sbPath=[[n,1n,n+1n,1n]];hi=0}
+    while(lo<hi){const m=(lo+hi+1)>>1;if(inside(sbPath[m]))lo=m;else hi=m-1}
+    sbPath.length=lo+1;
+    let [a,b,c,d]=sbPath[lo];let U=mk(a,b),V=mk(c,d);
+    for(let g=0;g<6000;g++){const mb=U[1]+V[1];if(mb>Q)break;
+      if(U[2]+V[2]>=0n&&U[3]+V[3]>=0n){let k=(V[3]-1n)/(-U[3]);const kq=(Q-V[1])/U[1];if(k>kq)k=kq;if(k<1n)k=1n;const NV=ax(V,U,k);if(NV[2]<=0n||NV[3]<=0n)break;V=NV}
+      else if(U[2]+V[2]<=0n&&U[3]+V[3]<=0n){let k=(-U[2]-1n)/V[2];const kq=(Q-U[1])/V[1];if(k>kq)k=kq;if(k<1n)k=1n;const NU=ax(U,V,k);if(NU[2]>=0n||NU[3]>=0n)break;U=NU}
+      else break;
+      sbPath.push([U[0],U[1],V[0],V[1]])}
+    const s0=Math.max(0,sbPath.length-48);for(let i=s0;i<sbPath.length;i++){const [a1,b1,c1,d1]=sbPath[i];add(mk(a1,b1));add(mk(c1,d1))}
+    for(let m=n0;m<=n1;m++)add(mk(m,1n));
+    st.push([U,V]);
+  }else{for(let m=n0;m<=n1;m++)add(mk(m,1n));for(let m=n0;m<n1;m++)st.push([mk(m,1n),mk(m+1n,1n)])}
+  let budget=7000;
+  while(st.length&&budget-->0){
+    const [U,V]=st.pop();
+    if(V[2]<=0n||U[3]>=0n)continue;
+    const mb=U[1]+V[1];if(mb>Q)continue;
+    if(U[3]+V[3]>0n){let k=(V[3]-1n)/(-U[3]);const kq=(Q-V[1])/U[1];if(k>kq)k=kq;if(k<1n)k=1n;
+      const NV=ax(V,U,k);add(NV);add(ax(NV,U,-1n));add(ax(NV,U,1n));st.push([U,NV]);continue}
+    if(U[2]+V[2]<0n){let k=(-U[2]-1n)/V[2];const kq=(Q-U[1])/V[1];if(k>kq)k=kq;if(k<1n)k=1n;
+      const NU=ax(U,V,k);add(NU);add(ax(NU,V,-1n));add(ax(NU,V,1n));st.push([NU,V]);continue}
+    const M=ax(U,V,1n);add(M);st.push([U,M]);st.push([M,V]);
+  }
+  return out;
+}
+function offNum(num,q){if(num===0n)return 0;const Lb=L/LOG2,fl=Math.floor(Lb),s=P-fl-30;if(s<0)return offPxLog(num,q);
+  const r=num/(q<<BigInt(s));if(r>B1000||r<-B1000)return num>0n?1e300:-1e300;const v=Number(r)*Math.pow(2,Lb-fl-30);return v>1e300?1e300:v<-1e300?-1e300:v}
+
+/* ---------- drawing ---------- */
+function size(){const r=cv.getBoundingClientRect();dpr=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);dirty=true}
+function circlePath(X,Y,R){
+  if(R<2e4){ctx.arc(X,Y,R,0,6.2832);return true}
+  const by=baseY(),pts=[];
+  for(let x=-8;x<=W+8;x+=3){const dd=x-X;if(Math.abs(dd)>=R)continue;pts.push([x,by-dd*dd/(R+Math.sqrt(R*R-dd*dd))])}
+  if(!pts.length)return false;
+  ctx.moveTo(pts[0][0],-10);pts.forEach(p=>ctx.lineTo(p[0],p[1]));ctx.lineTo(pts[pts.length-1][0],-10);ctx.closePath();return true}
+function arcStroke(X,Y,R){
+  if(R<2e4){ctx.arc(X,Y,Math.max(R,2),0,6.2832);return}
+  const by=baseY();let first=true;
+  for(let x=-8;x<=W+8;x+=3){const dd=x-X;if(Math.abs(dd)>=R){first=true;continue}const y=by-dd*dd/(R+Math.sqrt(R*R-dd*dd));if(first){ctx.moveTo(x,y);first=false}else ctx.lineTo(x,y)}}
+function geo(p,q){const R=rPx(q),X=W/2+offPx(p,q);return {X,Y:baseY()-R,R}}
+function onScreen(g){if(!(g.X+g.R>-2&&g.X-g.R<W+2&&g.Y+g.R>-2&&g.Y-g.R<H+2&&g.R<1e299))return false;const cx=Math.max(-2,Math.min(W+2,g.X)),cy=Math.max(-2,Math.min(H+2,g.Y)),dx=cx-g.X,dy=cy-g.Y;return dx*dx+dy*dy<g.R*g.R*(1+1e-9)+4}
+
+function sliderQ(){const v=+$('qmax').value;return v>=401?null:BigInt(v)}
+function draw(){
+  dirty=false;
+  if(!pal)pal={bg:css('--panel'),ink:css('--ink'),dim:css('--dim'),acc:css('--accent'),conv:css('--conv'),tan:css('--tan'),dark:document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches)};
+  const {bg,ink,dim,acc,conv,tan,dark}=pal;
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const hw=pxToFix(W*0.8),x0=C-hw,x1=C+hw;
+  const Qlog=(L-LOG2-Math.log10(0.6))/2,sq=sliderQ();let Q=pow10Big(Math.max(0,Qlog));if(sq!==null&&sq<Q)Q=sq;
+  const qTop=Math.max(0.3,sq!==null?Math.min(Qlog,Math.log10(+$('qmax').value)):Qlog);
+  vis=[];
+  for(const [p,q,num] of enumerate(x0,x1,Q)){const lq=flog10(q),R=Math.pow(10,L-LOG2-2*lq);if(R<0.5)continue;const g={R:R>1e300?1e300:R,X:W/2+offNum(num,q),Y:baseY()-R};if(!onScreen(g))continue;vis.push({p,q,lq,...g})}
+  vis.sort((a,b)=>b.R-a.R);
+  let ghosts=[];
+  if(zA){const keep=[];for(const c of vis)(passes(c.p,c.q)?keep:ghosts).push(c);zCounts=[keep.length,vis.length];vis=keep;
+    if($('ghost').checked){ctx.lineWidth=1;ctx.strokeStyle=dim;ctx.globalAlpha=0.22;for(const c of ghosts){ctx.beginPath();arcStroke(c.X,c.Y,c.R);ctx.stroke()}ctx.globalAlpha=1}}
+  ctx.lineWidth=1;
+  for(const c of vis){const k=col(c.lq/qTop);ctx.beginPath();if(!circlePath(c.X,c.Y,c.R))continue;
+    ctx.fillStyle='rgba('+k+','+(dark?0.2:0.16)+')';ctx.fill();ctx.beginPath();arcStroke(c.X,c.Y,c.R);ctx.strokeStyle='rgba('+k+','+(dark?0.85:0.75)+')';ctx.stroke()}
+  const by=baseY();
+  ctx.strokeStyle=ink;ctx.lineWidth=1.25;ctx.beginPath();ctx.moveTo(0,by);ctx.lineTo(W,by);ctx.stroke();
+  if(zA)drawCantor(by,acc);
+  drawRad();
+  const infY=by-Math.pow(10,L);
+  if(infY>-2&&infY<H){ctx.setLineDash([7,5]);ctx.strokeStyle=dim;ctx.beginPath();ctx.moveTo(0,infY);ctx.lineTo(W,infY);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=dim;ctx.font='12px "JetBrains Mono",monospace';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('1/0, the circle at infinity',W-10,infY-4)}
+  ticks(by,dim);
+  if(tgt){const X=W/2+offPx(tgt.n,tgt.d);if(X>=0&&X<=W){ctx.setLineDash([4,4]);ctx.strokeStyle=conv;ctx.lineWidth=1.25;ctx.beginPath();ctx.moveTo(X,0);ctx.lineTo(X,by);ctx.stroke();ctx.setLineDash([])}}
+  const ring=(p,q,color,w,dash)=>{const g=geo(p,q);if(!onScreen(g)&&!(g.R<2&&g.X>-5&&g.X<W+5))return;ctx.beginPath();arcStroke(g.X,g.Y,g.R);ctx.strokeStyle=color;ctx.lineWidth=w;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([])};
+  const qVis=pow10Big(Math.max(0,(L-LOG2+0.31)/2));
+  if($('semi').checked)for(const f of semis){if(f[1]<=qVis)ring(f[0],f[1],conv,1,[3,3])}
+  {let lo=0,hi=convs.length;while(lo<hi){const m=(lo+hi)>>1;if(convs[m][1]<=qVis)lo=m+1;else hi=m}for(let i=Math.max(0,lo-60);i<lo;i++)ring(convs[i][0],convs[i][1],conv,2.2)}
+  if(sel){const [p,q]=sel;
+    if($('tangents').checked){ctx.fillStyle=tan;const gs=geo(p,q);
+      for(const c of vis){const det=p*c.q-q*c.p;if(det!==1n&&det!==-1n)continue;ctx.beginPath();arcStroke(c.X,c.Y,c.R);ctx.strokeStyle=tan;ctx.lineWidth=1.6;ctx.stroke();
+        if(gs.R<1e6&&c.R<1e6){const dx=c.X-gs.X,dy=c.Y-gs.Y,dd=Math.hypot(dx,dy);ctx.beginPath();ctx.arc(gs.X+dx*gs.R/dd,gs.Y+dy*gs.R/dd,2.6,0,6.2832);ctx.fill()}}}
+    if($('farey').checked){for(const f of parents(p,q))if(f[1]>0n)ring(f[0],f[1],acc,2,[6,4]);for(const f of children(p,q))ring(f[0],f[1],acc,1.4,[2,3])}
+    ring(p,q,acc,3)}
+  if($('labels').checked){ctx.textAlign='center';ctx.textBaseline='middle';
+    for(const c of vis){if(c.R<15||c.X<12||c.X>W-12||c.R>1e6)continue;const ps=c.p.toString(),qs=c.q.toString(),len=Math.max(ps.length,qs.length);
+      let fs=Math.min(30,c.R*0.42,(c.R*1.7)/(len*0.58));if(fs<7)continue;ctx.font='600 '+fs+'px "Source Serif 4",Georgia,serif';ctx.fillStyle=ink;
+      const yc=Math.max(fs*1.4,Math.min(c.Y,by-fs*1.3));
+      if(c.q===1n){ctx.fillText(ps,c.X,yc);continue}
+      const wdt=Math.max(ctx.measureText(ps).width,ctx.measureText(qs).width);ctx.fillText(ps,c.X,yc-fs*0.62);ctx.fillText(qs,c.X,yc+fs*0.62);ctx.fillRect(c.X-wdt/2,yc-0.6,wdt,1.4)}}
+  const digits=Math.min(60,Math.max(3,Math.ceil(L)+1));
+  $('viewInfo').textContent='centre '+trunc(decStr(C,1n<<BigInt(P),digits),34)+'  ·  zoom ×10'+sup(Math.round(L-2.7))+'  ·  q up to '+(Qlog<6?Math.floor(Math.pow(10,Qlog)).toLocaleString():'10'+sup(Math.floor(Qlog)))+'  ·  '+vis.length+' circles';
+  if(zA&&$('zStats').offsetParent)zStatsUpd();
+  $('rampMax').textContent=qTop<6?'q = '+Math.floor(Math.pow(10,qTop)).toLocaleString():'q = 10'+sup(Math.floor(qTop));
+}
+function trunc(s,n){return s.length<=n?s:s.slice(0,n)+'…'}
+function ticks(by,dim){
+  const e=Math.floor(Math.log10(80)-L),r=Math.pow(10,Math.log10(80)-L-e),m=r<2?2n:r<5?5n:10n;
+  ctx.fillStyle=dim;ctx.font='11px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.textBaseline='top';
+  const TWO=1n<<BigInt(P),left=C-pxToFix(W/2);let den,kStart;
+  if(e<0){den=10n**BigInt(-e);kStart=ceilDiv(left*den,m*TWO)}else{den=1n;kStart=ceilDiv(left,m*(10n**BigInt(e))*TWO)}
+  for(let i=0n;i<BigInt(Math.ceil(W/40)+2);i++){const k=kStart+i,num=e<0?k*m:k*m*10n**BigInt(e),X=W/2+offPx(num,den);if(X>W+40)break;if(X<-40)continue;
+    ctx.fillRect(X,by,1,5);let s;
+    if(e<0){const neg=num<0n;let t=babs(num).toString().padStart(-e+1,'0');s=(neg?'−':'')+t.slice(0,t.length+e)+'.'+t.slice(t.length+e);s=s.replace(/\.?0+$/,'')||'0'}else s=num.toString();
+    if(s.length>11)s='…'+s.slice(-6);ctx.fillText(s,X,by+7)}}
+
+/* ---------- obstruction lab ---------- */
+let lab={A:{fin:[1,2,3,4,5]},B:null,tail:[],dim:null},labRes=null,labWorker=null;
+function parseDigits(str,allowEmpty){str=str.trim().toLowerCase().replace(/\s+/g,'').replace(/…/g,'...');if(!str)return allowEmpty?null:(()=>{throw 'empty'})();
+  if(str==='n'||str==='*'||str==='any')return {mult:1};let m;if((m=/^(\d+)n$/.exec(str))){const k=+m[1];if(k<1)throw 'bad';return {mult:k}}
+  const parts=str.split(','),out=new Set();
+  for(let i=0;i<parts.length;i++){const p=parts[i];
+    if(p==='...'){const a=+parts[i-2],b=+parts[i-1],c=+parts[i+1];if(!(b>a)||!(c>=b))throw 'Use a pattern like 4,8,...,128';for(let x=b;x<=c;x+=b-a)out.add(x);i++;continue}
+    if((m=/^(\d+)-(\d+)$/.exec(p))){const a=+m[1],b=+m[2];if(b<a||b-a>5000)throw 'bad range';for(let x=a;x<=b;x++)out.add(x);continue}
+    if(/^\d+$/.test(p)){out.add(+p);continue}throw 'Couldn\'t read "'+p+'"'}
+  const fin=[...out].filter(x=>x>=1).sort((x,y)=>x-y);if(!fin.length)throw 'Digits must be positive integers';return {fin}}
+function digStr(S){if(!S)return '';if(S.mult)return S.mult===1?'any':'multiples of '+S.mult;const f=S.fin;if(f.length>2&&f.every((x,i)=>i===0||x-f[i-1]===f[1]-f[0]))return f[1]-f[0]===1?'{'+f[0]+',…,'+f[f.length-1]+'}':'{'+f[0]+','+f[1]+',…,'+f[f.length-1]+'}';return '{'+f.join(',')+'}'}
+function inS(S,t){if(S.mult)return t%BigInt(S.mult)===0n;return t<=100000n&&S.fin.includes(Number(t))}
+function matchTerms(T){const L=lab,tl=L.tail.length;
+  const ok=e=>{if(e.length<tl)return false;for(let i=0;i<tl;i++)if(e[e.length-tl+i]!==BigInt(L.tail[i]))return false;let k=e.length-tl;
+    if(L.B){if(k<1||!inS(L.B,e[k-1]))return false;k--}for(let i=0;i<k;i++)if(!inS(L.A,e[i]))return false;return true};
+  if(ok(T))return true;const n=T.length;if(n&&T[n-1]>1n){const T2=T.slice(0,n-1);T2.push(T[n-1]-1n,1n);if(ok(T2))return true}return false}
+function cfTermsFrac(p,q){let a=((p%q)+q)%q,b=q;const T=[];while(a!==0n&&T.length<400){const t=b/a;T.push(t);[b,a]=[a,b-t*a]}return T}
+function passes(p,q){if(!zA||q===1n)return true;return matchTerms(cfTermsFrac(p,q))}
+function drawCantor(by,color){const S=lab.A;if(!S.fin||S.fin.length<1)return;const D=S.fin.map(BigInt),lo=D[0],hi=D[D.length-1]+1n;
+  const TWO=1n<<BigInt(P),hw=pxToFix(W*0.55),x0=C-hw,x1=C+hw,n0=floorDiv(x0,TWO)-1n,n1=floorDiv(x1,TWO)+1n;if(n1-n0>60n)return;
+  ctx.fillStyle=color;let budget=60000;
+  for(let n=n0;n<=n1;n++){const st=[[1n,0n,0n,1n]];
+    while(st.length&&budget-->0){const [hp,h,kp,k]=st.pop();
+      const e1d=k*lo+kp,e2d=k*hi+kp,X1=W/2+offPx(h*lo+hp+n*e1d,e1d),X2=W/2+offPx(h*hi+hp+n*e2d,e2d),l=Math.min(X1,X2),r=Math.max(X1,X2);
+      if(r<0||l>W)continue;if(r-l<1.2){ctx.fillRect(l,by-3,Math.max(1,r-l),6);continue}
+      for(const a of D)st.push([h,a*h+hp,k,a*k+kp])}}}
+function zStatsUpd(){let t='<dt>Family</dt><dd>[0; '+digStr(lab.A)+'*'+(lab.B?', '+digStr(lab.B):'')+(lab.tail.length?', '+lab.tail.join(', '):'')+']</dd>';
+  t+='<dt>Dimension of E_A</dt><dd>'+(lab.A.fin?(lab.dim==null?'…':lab.dim.toFixed(10)+(lab.dim>0.5?' (above ½)':' (below ½)')):'infinite alphabet, not computed')+'</dd>';
+  if(zA)t+='<dt>Circles on screen kept</dt><dd>'+zCounts[0]+' of '+zCounts[1]+'</dd>';
+  if(tgtTerms&&tgtTerms.length>1){const tail=tgtTerms.slice(1);let bad=-1;for(let i=0;i<tail.length;i++)if(!inS(lab.A,tail[i])){bad=i;break}
+    t+='<dt>Your number</dt><dd>'+(bad<0?'all '+tail.length.toLocaleString()+' computed terms are in A':'term '+(bad+1)+' is '+shortInt(tail[bad])+', not in A')+'</dd>'}
+  $('zStats').innerHTML=t}
+function labRead(){const err=$('labErr');err.textContent='';
+  try{const A=parseDigits($('labA').value,false),B=parseDigits($('labB').value,true),tr=$('labT').value.trim();
+    const tail=tr?tr.split(/[,\s]+/).filter(Boolean).map(x=>{if(!/^\d+$/.test(x)||+x<1)throw 'Tail must be positive integers';return +x}):[];
+    const changed=JSON.stringify([A,B,tail])!==JSON.stringify([lab.A,lab.B,lab.tail]);lab={A,B,tail,dim:changed?null:lab.dim};
+    if(lab.dim==null&&A.fin)setTimeout(()=>{lab.dim=A.fin.length<2?0:dimension(A.fin.slice(0,400));zStatsUpd();labEstimate()},10);
+    return true}catch(e){err.textContent=typeof e==='string'?e:'Couldn\'t read that.';return false}}
+function labEstimate(){const N=+$('labN').value;if(!lab.A.fin||lab.dim==null){$('labProg').textContent='';return}const est=Math.pow(N,2*lab.dim)*(lab.B?3:1);
+  $('labProg').textContent='about '+fmtExp(Math.log10(Math.max(1,est)))+' tree nodes'+(est>3e9?', this could take minutes':est>3e8?', several seconds':'')}
+const WORKER_SRC=document.getElementById('engineSrc').textContent+`
+onmessage=e=>{if(e.data.orb){const {orb:spec,N}=e.data,ns=orbNorm(spec),E=makeOrbEnum(ns,N);while(!E.step(ns.kind==='psi'?20000:4e6)){postMessage({progress:E.nodes});if(E.nodes>1.5e9){postMessage({capped:true,nodes:E.nodes});return}}postMessage({phase:'classify',nodes:E.nodes});const c=classify(spec,E.seen,N);postMessage({done:true,nodes:E.nodes,N,res:{mods:c.mods,nAdm:c.nAdm,nPresent:c.nPresent,nMissAdm:c.nMissAdm,nCong:c.nCong,famStats:c.famStats,base:c.base,nFam:c.nFam,spor:c.spor.length>4000?c.spor.slice(-4000):c.spor,nSpor:c.spor.length}});return}
+  if(e.data.orbScan){const {orbScan:spec,lo,hi}=e.data,ns=orbNorm(spec),miss=[];let tries=0,last=Date.now();for(let n=lo;n<=hi;n++){const q=Math.round(Math.sqrt(n));if(q*q===n)continue;const w=orbWitness(ns,n);tries+=w.tries;if(!(w.cf||w.u!==undefined)){if(miss.length<2000)miss.push(n);else miss.over=(miss.over||0)+1}if((n&4095)===0&&Date.now()-last>250){last=Date.now();postMessage({scanAt:n,found:miss.length})}}postMessage({scanEnd:true,miss,over:miss.over||0,tries});return}
+  if(e.data.scan){const {items,N,cap}=e.data;items.forEach((sp,i)=>{let r;try{r=scanOne(sp,N,cap)}catch(err){r={spec:sp,error:String(err)}}postMessage({scanItem:r,i})});postMessage({scanDone:true});return}
+  const {spec,N}=e.data;const E=makeEnum(spec,N);while(!E.step(4e6))postMessage({progress:E.nodes});
+  postMessage({phase:'classify',nodes:E.nodes});const c=classify(spec,E.seen,N);
+  postMessage({done:true,nodes:E.nodes,N,res:{mods:c.mods,nAdm:c.nAdm,nPresent:c.nPresent,nMissAdm:c.nMissAdm,nCong:c.nCong,famStats:c.famStats,base:c.base,nFam:c.nFam,spor:c.spor.length>4000?c.spor.slice(-4000):c.spor,nSpor:c.spor.length,buckets:c.buckets},cls:c.cls},[c.cls.buffer])}`;
+function labRun(){if(!labRead())return;labStop();const N=+$('labN').value,spec={A:lab.A,B:lab.B,tail:lab.tail},t0=performance.now();
+  $('labRun').disabled=true;$('labStop').disabled=false;$('labProg').textContent='starting…';
+  const done=m=>{$('labRun').disabled=false;$('labStop').disabled=true;labWorker=null;labRes={...m.res,cls:m.cls,N:m.N,nodes:m.nodes,ms:performance.now()-t0,spec};$('labProg').textContent='done in '+((performance.now()-t0)/1000).toFixed(1)+' s';labShow()};
+  try{const url=URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'}));const w=new Worker(url);labWorker=w;
+    w.onmessage=e=>{const m=e.data;if(m.progress)$('labProg').textContent=fmtExp(Math.log10(m.progress))+' nodes…';else if(m.phase)$('labProg').textContent='classifying…';else if(m.done)done(m)};
+    w.onerror=ev=>{ev.preventDefault();w.terminate();labWorker=null;labMain(spec,N,t0,done)};w.postMessage({spec,N})}
+  catch(e){labMain(spec,N,t0,done)}}
+function labMain(spec,N,t0,done){const E=makeEnum(spec,N);labWorker={terminate(){E.cancel=true}};
+  const tick=()=>{if(E.cancel)return;const fin=E.step(1.5e6);$('labProg').textContent=fmtExp(Math.log10(E.nodes))+' nodes…';if(!fin){setTimeout(tick,0);return}
+    const c=classify(spec,E.seen,N);done({N,nodes:E.nodes,cls:c.cls,res:{...c,nSpor:c.spor.length}})};setTimeout(tick,0)}
+function labStop(){if(labWorker){labWorker.terminate();labWorker=null;$('labProg').textContent='stopped'}$('labRun').disabled=false;$('labStop').disabled=true}
+function labShow(){const r=labRes;if(!r)return;const thin=!!(r.spec.A.fin&&lab.dim!=null&&lab.dim<=0.5),spWord=thin?'unreached':'sporadic';const N=r.N,pct=(a,b)=>b?(100*a/b).toFixed(a===b?0:2)+'%':'—';
+  const modTxt=r.mods.length?r.mods.map(([m,c,rs])=>'mod '+m+': '+c+' of '+m+(rs.length<=12?' ('+rs.join(',')+')':'')).join('; '):'none found, every residue can occur';
+  $('labStats').innerHTML='<dt>Tree nodes</dt><dd>'+r.nodes.toLocaleString()+'</dd><dt>Congruences</dt><dd>'+modTxt+'</dd><dt>Admissible ≤ N</dt><dd>'+r.nAdm.toLocaleString()+', of which '+r.nPresent.toLocaleString()+' appear ('+pct(r.nPresent,r.nAdm)+')</dd>'+
+    '<dt>Missing</dt><dd>'+(N-r.nPresent).toLocaleString()+': '+r.nCong.toLocaleString()+' by congruence, '+r.nFam.toLocaleString()+' in missing power families, '+r.nSpor.toLocaleString()+' '+spWord+'</dd>'+(thin?'<dt>Thin family</dt><dd>dimension '+lab.dim.toFixed(4)+' ≤ ½: the family has too few members to reach most numbers, so misses here say nothing on their own and no power family can be flagged by counting</dd>':'');
+  const fs=r.famStats.filter(f=>f.status!=='normal').concat(r.famStats.filter(f=>f.status==='normal').sort((a,b)=>b.missHi-a.missHi).slice(0,4));
+  $('labFamWrap').hidden=false;$('labFam').innerHTML='<tr><th style="text-align:left">family</th><th>admissible, top 99%</th><th>appear</th><th style="text-align:left">verdict</th></tr>'+fs.map(f=>'<tr><td style="text-align:left">'+(f.u>1?f.u+'·':'')+'n'+sup(f.d)+'</td><td>'+f.admHi+'</td><td>'+f.presHi+'</td><td style="text-align:left;color:'+(f.status==='obstructed'?'var(--tan)':f.status==='suspicious'?'var(--conv)':'var(--dim)')+'">'+({obstructed:'never appears',suspicious:'mostly missing',subsumed:'inside n²',normal:'normal ('+(100*f.missHi).toFixed(1)+'% missing)'}[f.status])+'</td></tr>').join('')+
+    '<tr><td style="text-align:left;color:var(--dim)" colspan="4">Baseline: '+(100*r.base).toFixed(2)+'% of admissible numbers in the top 99% are missing.</td></tr>';
+  const sp=r.spor,big=sp.length?sp[sp.length-1]:0;
+  $('labSpor').innerHTML=thin?'':r.nSpor?'<b>Sporadic, largest first:</b> '+sp.slice(-60).reverse().join(', ')+(r.nSpor>60?' …':'')+'<br><span style="color:var(--dim)">N / largest sporadic = '+(N/big).toFixed(2)+(N/big>10?', so the sporadic set looks finite at this range':', so these may continue past N')+'.</span>':'<b>No sporadic misses up to N.</b>';
+  $('labMapWrap').hidden=false;labMapSetup()}
+function labMapSetup(){if(!labRes)return;const w=+$('labW').value,rows=Math.min(200,Math.ceil(labRes.N/w)),span=w*rows,st=$('labStart');st.max=Math.max(0,Math.floor((labRes.N-1)/w)*w-span+w);st.step=w;if(+st.value>+st.max)st.value=st.max;labMapDraw()}
+let labMapImg=null;
+function labMapDraw(){const r=labRes;if(!r)return;const c=$('labMap'),w=+$('labW').value,start=+$('labStart').value,rows=Math.min(200,Math.ceil((r.N-start)/w));$('labStartOut').textContent=(start+1).toLocaleString();
+  const cw=c.getBoundingClientRect().width||300;const cell=Math.max(1,Math.floor(cw/w));c.style.height=Math.round(rows*cell*(cw/(w*cell)))+'px';
+  const [x,W2,H2]=miniCtx(c);const off=document.createElement('canvas');off.width=w;off.height=rows;const ox=off.getContext('2d'),img=ox.createImageData(w,rows);
+  const rgb=v=>{const d=document.createElement('div');d.style.color=v;document.body.appendChild(d);const m=getComputedStyle(d).color.match(/\d+/g).map(Number);d.remove();return m};
+  const COL=[rgb(css('--line')),rgb(css('--dim')),rgb(css('--tan')),rgb(css('--conv'))],bgc=rgb(css('--panel'));
+  for(let i=0;i<w*rows;i++){const n=start+i+1,k=n>r.N?null:(r.cls[n]);const cc=k==null?bgc:COL[k];img.data[4*i]=cc[0];img.data[4*i+1]=cc[1];img.data[4*i+2]=cc[2];img.data[4*i+3]=255}
+  ox.putImageData(img,0,0);x.imageSmoothingEnabled=false;x.drawImage(off,0,0,W2,H2);labMapImg={w,rows,start,W2,H2}}
+function factorStr(n){const f=[];let m=n;for(let p=2;p*p<=m;p++){let e=0;while(m%p===0){m/=p;e++}if(e)f.push(p+(e>1?sup(e):''))}if(m>1)f.push(m);return f.join('·')}
+$('labMap').addEventListener('mousemove',e=>{if(!labMapImg||!labRes)return;const g=labMapImg,col=Math.floor(e.offsetX/g.W2*g.w),row=Math.floor(e.offsetY/g.H2*g.rows),n=g.start+row*g.w+col+1;if(n>labRes.N||n<1)return;
+  $('labHover').textContent=n.toLocaleString()+' = '+factorStr(n)+' · '+['appears','missing: congruence','missing: power family','missing: sporadic'][labRes.cls[n]]+' · '+n+' mod '+g.w+' = '+(n%g.w)});
+/* ---------- batch scan ---------- */
+let scanWorker=null,scanResults=[];
+function specStr(s){const d=S=>S.mult?(S.mult===1?'n':S.mult+'n'):(()=>{const f=S.fin;if(f.length>2&&f.every((x,i)=>i===0||x-f[i-1]===f[1]-f[0])&&f[1]-f[0]>1)return f[0]+','+f[1]+',...,'+f[f.length-1];if(f.length>2&&f.every((x,i)=>i===0||x-f[i-1]===1))return f[0]+'-'+f[f.length-1];return f.join(',')})();
+  return d(s.A)+' | '+(s.B?d(s.B):'')+' | '+s.tail.join(',')}
+function knownWhy(sp,f){const A=sp.A,even=A.mult?A.mult%2===0:A.fin.every(x=>x%2===0),four=A.mult?A.mult%4===0:A.fin.every(x=>x%4===0);
+  if(four&&f.u===1&&f.d===2)return 'Rickards–Stange type (digits in 4ℤ)';
+  const t=sp.tail;if(even&&sp.B&&t.length&&f.u===2&&f.d===2){const K=w=>{let p=1,q=0;for(let i=w.length-1;i>=0;i--){[p,q]=[w[i]*p+q,p]}return p},a=K(t),b=K(t.slice(1));
+    const J=(x,n)=>{x%=n;let r=1;while(x){while(x%2===0){x/=2;const m=n%8;if(m===3||m===5)r=-r}[x,n]=[n,x];if(x%4===3&&n%4===3)r=-r;x%=n}return n===1?r:0};
+    if(a%2?J(2*b,a)===-1:(a%8===0||a%8===2)&&J(2*a,b)===-1)return a===t[0]&&t.length===1?'even-digit lemma: tail ≡ ±3 mod 8':'even-digit rule (conjectured): Jacobi symbol of the tail is −1'}
+  return null}
+function scanItems(){const type=$('scanType').value,mid=$('scanMid').value,mids=mid==='both'?[null,{mult:1}]:mid==='any'?[{mult:1}]:[null];
+  const tails=$('scanTails').value.split(';').map(x=>x.trim()).map(x=>x===''||x==='-'?[]:x.split(/[,\s]+/).filter(Boolean).map(Number));if(tails.some(t=>t.some(x=>!(x>=1))))throw 'Tails must be positive integers, separated by ;';
+  const As=[];
+  if(type==='sub'){const K=Math.max(2,Math.min(24,+$('scanK').value)),m=/^(\d+)(?:-(\d+))?$/.exec($('scanSz').value.trim());if(!m)throw 'Sizes like 2-3';const s1=+m[1],s2=+(m[2]||m[1]);
+    const rec=(st,cur)=>{if(cur.length>=s1&&cur.length<=s2)As.push({fin:cur.slice()});if(cur.length===s2)return;for(let d=st;d<=K;d++){cur.push(d);rec(d+1,cur);cur.pop()}};rec(1,[])}
+  else if(type==='mult'){const S=Math.max(2,Math.min(60,+$('scanS').value));for(let k=2;k<=S;k++)As.push({mult:k})}
+  else{const items=[];for(const line of $('scanCustom').value.split('\n')){if(!line.trim())continue;const [a,bq='',t='']=line.split('|');const A=parseDigits(a,false),B=parseDigits(bq,true),tl=t.trim()?t.trim().split(/[,\s]+/).map(Number):[];items.push({A,B,tail:tl})}return items}
+  const items=[];for(const A of As)for(const B of mids)for(const t of tails)items.push({A,B,tail:t});return items}
+function scanRun(){let items;try{items=scanItems()}catch(e){$('scanProg').textContent=typeof e==='string'?e:'Couldn\'t read the settings.';return}
+  if(!items.length){$('scanProg').textContent='Nothing to run.';return}if(items.length>6000){$('scanProg').textContent=items.length+' families is too many; narrow it to 6,000.';return}
+  scanStop();scanResults=[];const N=+$('scanN').value,cap=+$('scanCap').value,t0=performance.now();$('scanOut').innerHTML='';$('scanRun').disabled=true;$('scanStop').disabled=false;
+  let w;try{w=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})))}catch(e){$('scanProg').textContent='This browser blocked background workers, so batch scans can\'t run here.';$('scanRun').disabled=false;return}
+  scanWorker=w;let last=0;
+  w.onmessage=e=>{const m=e.data;if(m.scanItem){scanResults.push(m.scanItem);const now=performance.now();$('scanProg').textContent=(m.i+1)+' of '+items.length+' · '+((now-t0)/1000).toFixed(0)+' s';if(now-last>700){last=now;scanShow(false)}}
+    else if(m.scanDone){scanWorker=null;w.terminate();$('scanRun').disabled=false;$('scanStop').disabled=true;$('scanProg').textContent='done: '+items.length+' families in '+((performance.now()-t0)/1000).toFixed(1)+' s';scanShow(true)}};
+  w.postMessage({scan:true,items,N,cap})}
+function scanStop(){if(scanWorker){scanWorker.terminate();scanWorker=null;$('scanProg').textContent+=' · stopped';scanShow(true)}$('scanRun').disabled=false;$('scanStop').disabled=true}
+function scanShow(final){const R=scanResults,capped=R.filter(r=>r.capped).length,hits=[];
+  for(const r of R){if(!r.flagged)continue;for(const f of r.flagged){const why=knownWhy(r.spec,f),strong=f.presHi===0&&f.expect>=30;hits.push({r,f,why,strong,score:(f.expect-f.presHi)*(why?0.01:1)+(strong&&!why?1e6:0)})}}
+  hits.sort((a,b)=>b.score-a.score);const nNew=hits.filter(h=>!h.why).length;
+  const head='<p class="note">'+R.length+' families run'+(capped?' ('+capped+' skipped: over the node cap)':'')+'. '+hits.length+' flagged: '+nNew+' unexplained, '+(hits.length-nNew)+' explained by a known result.</p>';
+  const rows=hits.slice(0,150).map((h,i)=>'<div class="it"><div><b>[0; '+specStr(h.r.spec).replace(/ \| /g,' · ')+']</b>'+(h.why?'<span class="tag known">'+h.why+'</span>':h.strong?'<span class="tag new">never appears, unexplained</span>':h.f.presHi===0?'<span class="tag weak">never appears, small sample</span>':'<span class="tag weak">mostly missing</span>')+'</div>'+
+    '<div>'+(h.f.u>1?h.f.u+'·':'')+'n'+sup(h.f.d)+': '+h.f.presHi+' of '+h.f.admHi+' appear, '+h.f.expect+' expected · coverage '+(100*h.r.cov).toFixed(1)+'%'+(h.r.dim!=null?' · dim '+h.r.dim.toFixed(3):'')+(h.r.mods.length?' · mods '+h.r.mods.map(x=>x[0]).join(','):'')+'</div>'+
+    '<div><button class="chip" type="button" data-open="'+R.indexOf(h.r)+'">Open in lab</button></div></div>').join('');
+  $('scanOut').innerHTML=head+'<div class="scanres">'+(rows||'<span class="note" style="color:var(--dim)">Nothing flagged'+(final?'.':' yet.')+'</span>')+'</div>'+(final&&R.length?'<button class="btn" type="button" id="scanCopy" style="margin-top:8px">Copy results as CSV</button>':'');
+  $('scanOut').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const r=R[+b.dataset.open],[a,bb,t]=specStr(r.spec).split(' | ');$('labA').value=a;$('labB').value=bb;$('labT').value=t;const sel=$('labN');for(const o of sel.options)if(+o.value>=r.N){sel.value=o.value;break}labRead();zStatsUpd();labEstimate();$('labA').scrollIntoView({block:'center'})});
+  const cp=$('scanCopy');if(cp)cp.onclick=()=>{const lines=['digits,middle,tail,N,nodes,coverage,dim,family,appear,admissible,expected,status,known'];
+    for(const r of R){const base=[...specStr(r.spec).split(' | ').map(x=>'"'+x+'"'),r.N,r.nodes,r.cov!=null?r.cov.toFixed(5):'',r.dim!=null?r.dim.toFixed(6):''];if(r.capped){lines.push(base.join(',')+',,,,,capped,');continue}
+      if(!r.flagged.length)lines.push(base.join(',')+',,,,,none,');for(const f of r.flagged)lines.push(base.join(',')+','+(f.u>1?f.u+'*':'')+'n^'+f.d+','+f.presHi+','+f.admHi+','+f.expect+','+f.status+',"'+(knownWhy(r.spec,f)||'')+'"')}
+    const txt=lines.join('\n');(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>cp.textContent='Copied',()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cp.textContent='Copied'}catch(e){cp.textContent='Copy failed'}ta.remove()})}}
+$('scanType').onchange=()=>{const t=$('scanType').value;document.querySelectorAll('.scSub').forEach(e=>e.hidden=t!=='sub');document.querySelectorAll('.scMult').forEach(e=>e.hidden=t!=='mult');$('scanCustom').hidden=t!=='custom'};
+$('scanRun').onclick=scanRun;$('scanStop').onclick=scanStop;
+const LAB_PRESETS=[['Zaremba, A = 5','1-5','',''],['A = 4','1-4','',''],['A = 3','1-3','',''],['A = 2','1,2','',''],['Rickards–Stange','4,8,...,128','','1,1,2'],['Rickards–Stange, mixed','4n','n','1,2'],['Digits 2,3','2,3','',''],['Odd digits ≤ 9','1,3,5,7,9','',''],['Even digits, tail 3','2n','n','3']];
+(()=>{const box=$('labPresets');LAB_PRESETS.forEach(([l,a,b,t])=>{const el=document.createElement('button');el.className='chip';el.type='button';el.textContent=l;el.onclick=()=>{$('labA').value=a;$('labB').value=b;$('labT').value=t;labRead();zStatsUpd();if(sel)select(sel[0],sel[1]);req()};box.appendChild(el)})})();
+function cfShort(p,q){const t=[];let a=p,b=q;while(b!==0n&&t.length<40){const f=floorDiv(a,b);t.push(f);[a,b]=[b,a-f*b]}
+  const s=t.map(x=>shortInt(x));return '['+s[0]+(s.length>1?'; '+s.slice(1,24).join(', '):'')+(s.length>24?', … ('+(t.length>=40?'40+':t.length)+' terms)':'')+']'}
+
+/* ---------- semigroup orbits ---------- */
+let orbW=null,orbScanW=null,orbSpec=null;
+function orbRead(){$('orbErr').textContent='';
+  const kind=$('orbKind').value,int=id=>{const v=Number($(id).value);if(!Number.isInteger(v)||v<1)throw 'Use positive whole numbers.';return v};
+  try{const x=int('orbX'),y=int('orbY'),p=kind==='gen'?int('orbP'):1,r=kind==='gen'?int('orbR'):4,coord=$('orbC').value;
+    let g=x,h=y;while(h){[g,h]=[h,g%h]}if(g!==1)throw 'x and y must be coprime.';
+    if(p>64||r>64)throw 'Keep p and r at 64 or below.';
+    return orbSpec={orb:true,kind,p,r,x,y,coord}}catch(e){$('orbErr').textContent=typeof e==='string'?e:'Couldn\'t read that.';return null}}
+function orbName(s){const sup2=v=>v===1?'':sup(v);const g=s.kind==='psi'?'Ψ':(s.p===1&&s.r===4?'Ψ₁ = ⟨L, R⁴⟩':s.p===4&&s.r===4?'Ψ₂ = ⟨L⁴, R⁴⟩':'⟨L'+sup2(s.p)+', R'+sup2(s.r)+'⟩');
+  return (s.coord==='num'?'numerators':'denominators')+' of '+g+'·('+s.x+', '+s.y+')'}
+function orbSyncKind(){const g=$('orbKind').value==='gen';document.querySelectorAll('.orbGen').forEach(e=>e.hidden=!g)}
+function orbRun(){const spec=orbRead();if(!spec)return;orbStop();const N=+$('orbN').value,t0=performance.now();
+  if(spec.kind==='psi'&&N>1000000){$('orbErr').textContent='For Ψ the lab tests each number directly, so keep N at 1,000,000 or below.';return}
+  $('orbRun').disabled=true;$('orbStop').disabled=false;$('orbProg').textContent='starting…';
+  const done=m=>{$('orbRun').disabled=false;$('orbStop').disabled=true;orbW=null;$('orbProg').textContent='done in '+((performance.now()-t0)/1000).toFixed(1)+' s';orbShow({...m.res,N:m.N,nodes:m.nodes,spec})};
+  let w;try{w=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})))}catch(e){w=null}
+  if(!w){const ns=orbNorm(spec),E=makeOrbEnum(ns,N);orbW={terminate(){E.cancel=true}};
+    const tick=()=>{if(E.cancel)return;const fin=E.step(ns.kind==='psi'?4000:1.5e6);if(E.nodes>1.5e9){orbW=null;$('orbRun').disabled=false;$('orbStop').disabled=true;$('orbProg').textContent='stopped at 1.5×10⁹ matrices; lower N';return}$('orbProg').textContent=fmtExp(Math.log10(Math.max(1,E.nodes)))+' steps…';if(!fin){setTimeout(tick,0);return}
+      const c=classify(spec,E.seen,N);done({N,nodes:E.nodes,res:{...c,nSpor:c.spor.length}})};setTimeout(tick,0);return}
+  orbW=w;w.onmessage=e=>{const m=e.data;if(m.capped){w.terminate();orbW=null;$('orbRun').disabled=false;$('orbStop').disabled=true;$('orbProg').textContent='stopped at 1.5×10⁹ matrices';$('orbStats').innerHTML='';$('orbFamWrap').hidden=true;$('orbSpor').innerHTML='<b>This orbit is too dense to walk up to N.</b> Lower N, or use Check one number and the range scan below, which test numbers directly.';return}if(m.progress)$('orbProg').textContent=fmtExp(Math.log10(Math.max(1,m.progress)))+' steps…';else if(m.phase)$('orbProg').textContent='classifying…';else if(m.done)done(m)};
+  w.postMessage({orb:spec,N})}
+function orbStop(){if(orbW){orbW.terminate();orbW=null;$('orbProg').textContent='stopped'}$('orbRun').disabled=false;$('orbStop').disabled=true}
+function orbShow(r){const N=r.N,pct=(a,b)=>b?(100*a/b).toFixed(a===b?0:2)+'%':'—';
+  const modTxt=r.mods.length?r.mods.map(([m,c,rs])=>'mod '+m+': '+c+' of '+m+(rs.length<=12?' ('+rs.join(',')+')':'')).join('; '):'none, every residue can occur';
+  $('orbStats').innerHTML='<dt>Orbit</dt><dd>'+orbName(r.spec)+'</dd><dt>'+(r.spec.kind==='psi'?'Candidates tested':'Matrices walked')+'</dt><dd>'+r.nodes.toLocaleString()+'</dd><dt>Congruences</dt><dd>'+modTxt+'</dd><dt>Admissible ≤ N</dt><dd>'+r.nAdm.toLocaleString()+', of which '+r.nPresent.toLocaleString()+' appear ('+pct(r.nPresent,r.nAdm)+')</dd>'+
+    '<dt>Missing</dt><dd>'+(N-r.nPresent).toLocaleString()+': '+r.nCong.toLocaleString()+' by congruence, '+r.nFam.toLocaleString()+' in missing power families, '+r.nSpor.toLocaleString()+' sporadic</dd>';
+  const fs=r.famStats.filter(f=>f.status!=='normal').concat(r.famStats.filter(f=>f.status==='normal').sort((a,b)=>b.missHi-a.missHi).slice(0,3));
+  $('orbFamWrap').hidden=false;$('orbFam').innerHTML='<tr><th style="text-align:left">family</th><th>admissible, top 99%</th><th>appear</th><th style="text-align:left">verdict</th></tr>'+fs.map(f=>'<tr><td style="text-align:left">'+(f.u>1?f.u+'·':'')+'n'+sup(f.d)+'</td><td>'+f.admHi+'</td><td>'+f.presHi+'</td><td style="text-align:left;color:'+(f.status==='obstructed'?'var(--tan)':f.status==='suspicious'?'var(--conv)':'var(--dim)')+'">'+({obstructed:'never appears',suspicious:'mostly missing',subsumed:'inside n²',normal:'normal ('+(100*f.missHi).toFixed(1)+'% missing)'}[f.status])+'</td></tr>').join('');
+  const sp=r.spor,big=sp.length?sp[sp.length-1]:0;
+  $('orbSpor').innerHTML=r.nSpor?'<b>Sporadic, largest first:</b> '+sp.slice(-60).reverse().join(', ')+(r.nSpor>60?' …':'')+'<br><span style="color:var(--dim)">N / largest sporadic = '+(N/big).toFixed(2)+(N/big>10?', so the sporadic set looks finite at this range. Use the range scan to test past N.':', so these may continue past N.')+'</span>':'<b>No sporadic misses up to N.</b>';
+  $('orbLo').value=String(Math.max(1,big+1));$('orbHi').value=String(Math.max(N*10,1000000))}
+/* certificate: an explicit matrix in the semigroup carrying (x, y) to a vector with the requested coordinate n */
+function bmul(X,Y){return [[X[0][0]*Y[0][0]+X[0][1]*Y[1][0],X[0][0]*Y[0][1]+X[0][1]*Y[1][1]],[X[1][0]*Y[0][0]+X[1][1]*Y[1][0],X[1][0]*Y[0][1]+X[1][1]*Y[1][1]]]}
+function bEg(a,b){let [r0,r1,s0,s1,t0,t1]=[a,b,1n,0n,0n,1n];while(r1){const q=r0/r1;[r0,r1]=[r1,r0-q*r1];[s0,s1]=[s1,s0-q*s1];[t0,t1]=[t1,t0-q*t1]}return [r0,s0,t0]}
+function bKron(a,n){return kron(Number(a),Number(n))}
+function orbCertificate(spec,n){const ns=orbNorm(spec),w=orbWitness(ns,n);
+  if(!(w.cf||w.u!==undefined))return {ok:false,tries:w.tries};
+  let M,word='',checks=[];
+  if(ns.kind==='gen'){const t=w.cf,parts=[];M=[[1n,0n],[0n,1n]];
+    const nm=(isL,e)=>{const base=(isL!==ns.swapped)?'L':'R',gp=isL?ns.p:ns.r,k=e/gp;return gp>1?'('+base+sup(gp)+')'+(k>1?sup(k):''):base+(e>1?sup(e):'')};
+    for(let i=t.length-1;i>=0;i--){const k=BigInt(t[i]);if(!t[i])continue;const isL=i%2===1;M=bmul(M,isL?[[1n,k],[0n,1n]]:[[1n,0n],[k,1n]]);parts.push(nm(isL,t[i]))}
+    if(ns.swapped)M=[[M[1][1],M[1][0]],[M[0][1],M[0][0]]];
+    word=parts.length?parts.join(' · '):'the identity';
+    const exps=t.map((v,i)=>v%(i%2?ns.p:ns.r)===0).every(Boolean);checks.push(['every exponent is a multiple of its generator power',exps])}
+  else{const u=BigInt(w.u),v=BigInt(w.v);
+    if(spec.coord==='num'){let [g,d,c]=bEg(u,v);c=-c; // d u - c v = 1
+      let k=((-c)%4n+4n)%4n;if(u%4n!==1n)k=0n;c+=u*k;d+=v*k;while(c<0n||d<0n){c+=4n*u;d+=4n*v}M=[[u,v],[c,d]]}
+    else{let [g,a,b]=bEg(v,u);b=-b; // a v - b u = 1
+      while(a<0n||b<0n){a+=u;b+=v}M=[[a,b],[u,v]]}
+    const [[a,b],[c,d]]=M;checks.push(['M is in Γ₁(4): a ≡ d ≡ 1, c ≡ 0 (mod 4)',a%4n===1n&&d%4n===1n&&c%4n===0n],['Kronecker symbol (a/b) = 1, so M is in Ψ (Prop. 2.2)',bKron(a,b)===1]);word='built from Lemma 4.1 with (u, v) = ('+w.u+', '+w.v+')'}
+  const [[a,b],[c,d]]=M,X=BigInt(spec.x),Y=BigInt(spec.y),out=[a*X+b*Y,c*X+d*Y],coord=spec.coord==='num'?out[0]:out[1];
+  checks.unshift(['det M = 1',a*d-b*c===1n],['all entries ≥ 0',a>=0n&&b>=0n&&c>=0n&&d>=0n],['M·('+spec.x+', '+spec.y+') = ('+out[0]+', '+out[1]+'), '+(spec.coord==='num'?'numerator':'denominator')+' '+coord,coord===BigInt(n)]);
+  return {ok:true,M,word,checks,tries:w.tries}}
+function orbOne(){const spec=orbRead();if(!spec)return;const raw=$('orbOne').value.trim().replace(/[,_\s]/g,'');
+  if(!/^\d+$/.test(raw)||+raw<1||+raw>1e9){$('orbOneOut').innerHTML='<span class="err">Enter a positive whole number up to 10⁹.</span>';return}
+  const n=+raw,t0=performance.now(),R=orbCertificate(spec,n),ms=(performance.now()-t0).toFixed(1);
+  if(!R.ok){const q=Math.round(Math.sqrt(n));$('orbOneOut').innerHTML='<div class="cert"><span class="no">'+n.toLocaleString()+' is not '+(spec.coord==='num'?'a numerator':'a denominator')+' of this orbit.</span><span>All '+R.tries.toLocaleString()+' candidate rows were tested and none lies in the semigroup ('+ms+' ms).'+(q*q===n?' It is a square.':'')+'</span></div>';return}
+  const [[a,b],[c,d]]=R.M,all=R.checks.every(x=>x[1]);
+  $('orbOneOut').innerHTML='<div class="cert"><span class="'+(all?'ok':'no')+'">'+n.toLocaleString()+' appears'+(all?', certified':', but a check failed')+' ('+ms+' ms)</span><span>M = ('+a+' '+b+'; '+c+' '+d+')</span>'+(spec.kind==='gen'?'<span>M = '+R.word+'</span>':'<span>'+R.word+'</span>')+
+    R.checks.map(([l,ok])=>'<span class="'+(ok?'ok':'no')+'">'+(ok?'✓ ':'✗ ')+l+'</span>').join('')+'</div>'}
+function orbScan(){const spec=orbRead();if(!spec)return;orbScanStop();const lo=Math.max(1,Math.floor(+$('orbLo').value.replace(/[,_\s]/g,''))),hi=Math.floor(+$('orbHi').value.replace(/[,_\s]/g,''));
+  if(!(hi>=lo)||!isFinite(hi)||hi>1e9){$('orbScanProg').textContent='Give a range like 10570 to 10000000, ending at 10⁹ or below.';return}
+  let w;try{w=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})))}catch(e){$('orbScanProg').textContent='This browser blocked background workers, so range scans can\'t run here.';return}
+  orbScanW=w;const t0=performance.now();$('orbScanGo').disabled=true;$('orbScanStop').disabled=false;$('orbScanOut').innerHTML='';$('orbScanProg').textContent='starting…';
+  w.onmessage=e=>{const m=e.data;if(m.scanAt){const f=(m.scanAt-lo)/(hi-lo+1),el=(performance.now()-t0)/1000;$('orbScanProg').textContent=m.scanAt.toLocaleString()+' · '+(100*f).toFixed(1)+'% · '+m.found+' missing so far · '+el.toFixed(0)+' s'+(f>0.02?', about '+Math.round(el*(1-f)/f)+' s left':'')}
+    else if(m.scanEnd){orbScanW=null;w.terminate();$('orbScanGo').disabled=false;$('orbScanStop').disabled=true;const el=((performance.now()-t0)/1000).toFixed(1);
+      $('orbScanProg').textContent='done in '+el+' s, '+m.tries.toLocaleString()+' candidate rows tested';
+      $('orbScanOut').innerHTML=m.miss.length?'<b>'+(m.miss.length+m.over).toLocaleString()+' non-squares in ['+lo.toLocaleString()+', '+hi.toLocaleString()+'] never appear:</b> '+m.miss.slice(0,300).join(', ')+(m.miss.length>300||m.over?' …':''):'<b>Every non-square in ['+lo.toLocaleString()+', '+hi.toLocaleString()+'] appears.</b> <span style="color:var(--dim)">('+orbName(spec)+')</span>'}};
+  w.postMessage({orbScan:spec,lo,hi})}
+function orbScanStop(){if(orbScanW){orbScanW.terminate();orbScanW=null;$('orbScanProg').textContent+=' · stopped'}$('orbScanGo').disabled=false;$('orbScanStop').disabled=true}
+const ORB_PRESETS=[['Ψ₁·(2,3) numerators','gen',1,4,2,3,'num','Conjecture 2.15: every non-square above 10569'],['Ψ₂·(3,8) denominators','gen',4,4,3,8,'den','Prop. 2.12: only 0 mod 4, yet no squares'],['Ψ·(2,3) numerators','psi',1,4,2,3,'num','Theorem 2.8: squares plus 15 exceptions'],['Ψ·(3,5) denominators','psi',1,4,3,5,'den','Table 1, row (∗,1) with (3/5) = −1'],['⟨L, R⟩·(1,1)','gen',1,1,1,1,'num','control: no obstruction'],['⟨L², R²⟩·(1,2)','gen',2,2,1,2,'num','try it']];
+(()=>{const box=$('orbPresets');ORB_PRESETS.forEach(([l,k,p,r,x,y,c,why])=>{const el=document.createElement('button');el.className='chip';el.type='button';el.textContent=l;el.title=why;
+  el.onclick=()=>{$('orbKind').value=k;$('orbP').value=p;$('orbR').value=r;$('orbX').value=x;$('orbY').value=y;$('orbC').value=c;orbSyncKind();orbRead()};box.appendChild(el)})})();
+$('orbKind').onchange=orbSyncKind;$('orbRun').onclick=orbRun;$('orbStop').onclick=orbStop;$('orbOneGo').onclick=orbOne;$('orbOne').addEventListener('keydown',e=>{if(e.key==='Enter')orbOne()});
+$('orbScanGo').onclick=orbScan;$('orbScanStop').onclick=orbScanStop;orbSyncKind();
+
+/* ---------- Markov / Lagrange ---------- */
+const FREIMAN=4.527829566;
+const MK=(()=>{const set=new Set([1,2,5]),st=[[1,2,5]];while(st.length){const [a,b,c]=st.pop();for(const t of [[a,c,3*a*c-b],[b,c,3*b*c-a]]){const m=Math.max(...t);if(m<=1e8&&!set.has(m)){set.add(m);st.push(t)}}}return [...set].sort((x,y)=>x-y)})();
+const MKSET=new Set(MK);
+const MKW=(()=>{const tr=w=>{let a=1,b=0,c=0,d=1;for(const t of w){[a,b,c,d]=[a*t+b,a,c*t+d,c]}return a+d};const out=[[1,[1,1]],[2,[2,2]]],st=[[[1,1],[2,2]]];
+  while(st.length){const [u,v]=st.pop(),uv=[...u,...v],m=tr(uv)/3;if(m>1000)continue;out.push([m,uv]);st.push([u,uv],[uv,v])}return out.sort((x,y)=>x[0]-y[0])})();
+let lg=null;
+function findPeriod(t){t=t.slice(0,Math.max(0,t.length-6));for(let p=1;p<=80;p++)for(let s0=0;s0<=20;s0++){if(t.length-s0<Math.max(30,3*p))break;let ok=true;for(let i=s0;i+p<t.length;i++)if(t[i]!==t[i+p]){ok=false;break}if(ok)return [s0,p]}return null}
+function lgCompute(){
+  lg=null;if(!tgt||!tgtTerms)return;
+  if(tgt.rational){lg={rational:true};return}
+  const t=tgtTerms.slice(1).map(x=>x>10n**15n?1e15:Number(x));if(t.length<3)return;
+  const per=findPeriod(t),arcs=[];
+  if(per){const [s0,p]=per,w=t.slice(s0,s0+p),md=k=>((k%p)+p)%p;
+    const alpha=k=>{let v=1;for(let j=60;j>=0;j--)v=w[md(k+j)]+1/v;return v},beta=k=>{let v=1;for(let j=60;j>=1;j--)v=w[md(k-j)]+1/v;return 1/v};
+    let L=0;const n=p%2?2*p:p;for(let k=0;k<n;k++){const a=alpha(k),b=beta(k);L=Math.max(L,a+b);arcs.push([w[md(k)],a,b])}
+    const m=Math.round(2/Math.sqrt(Math.max(1e-30,9-L*L))),isMk=L<3&&MKSET.has(m)&&Math.abs(L-Math.sqrt(9-4/(m*m)))<1e-9;
+    lg={periodic:true,pre:s0,w,L,mk:isMk?m:0,arcs};return}
+  const N=t.length,K=Math.min(N,16),cs=[];
+  for(let k=0;k<N;k++){let a=1;for(let j=Math.min(N-1,k+40);j>=k;j--)a=t[j]+1/a;let b=1;for(let j=Math.max(0,k-40);j<=k-1;j++)b=t[j]+1/b;const bb=k?1/b:0;cs.push(a+bb);if(k<K)arcs.push([t[k],a,bb])}
+  const half=cs.slice(Math.floor(N/2));let mx=0,mi=0;half.forEach((v,i)=>{if(v>mx){mx=v;mi=i+Math.floor(N/2)}});
+  lg={periodic:false,est:mx,estAt:mi+1,N,arcs,first:cs[0]}}
+function lgStatsUpd(){const box=$('lgStats');
+  if(!lg){box.innerHTML='<dt>Trace a number</dt><dd>to see its Lagrange value</dd>';return}
+  if(lg.rational){box.innerHTML='<dt>Rational</dt><dd>its geodesic runs straight into a cusp, so there is no Lagrange value</dd>';return}
+  const where=L=>L<3-1e-9?'below 3. Markov\'s theorem: only the values √(9m² − 4)/m live here, one per Markov number m':L<FREIMAN?'between 3 and Freiman\'s constant 4.5278…, where the spectrum is a fractal tangle of gaps and Cantor sets':'inside Hall\'s ray: every number above 4.5278… is some Lagrange value';
+  if(lg.periodic){const sq=lg.w.length%2?lg.w.concat(lg.w):lg.w,cut=sq.map((a,i)=>(i%2?'L':'R')+(a>1?sup(a):'')).join(' ');
+    box.innerHTML='<dt>Period</dt><dd>('+lg.w.join(', ')+')'+(lg.pre?' after '+lg.pre+' other terms':'')+'</dd><dt>Lagrange value</dt><dd>L = '+lg.L.toFixed(12)+(lg.mk?' = √(9·'+lg.mk+'² − 4)/'+lg.mk:'')+'</dd><dt>Spectrum</dt><dd>'+(lg.mk?'Markov number m = '+lg.mk+'. ':'')+'L is '+where(lg.L)+'</dd><dt>Cutting sequence</dt><dd>'+cut+', repeating</dd>';return}
+  box.innerHTML='<dt>Periodic?</dt><dd>no, so L is a limsup over the infinite tail, which no finite computation settles</dd><dt>Max, 2nd half</dt><dd>'+(lg.est>1e6?fmtExp(Math.log10(lg.est)):lg.est.toFixed(6))+' (at convergent '+lg.estAt.toLocaleString()+' of '+lg.N.toLocaleString()+')</dd><dt>If that held</dt><dd>L would be '+where(lg.est)+'</dd>'}
+function miniCtx(c){const r=c.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return [x,r.width,r.height]}
+function specDraw(){if($('spec').getBoundingClientRect().width<40)return;const [x,w,h]=miniCtx($('spec')),ink=css('--ink'),dim=css('--dim'),acc=css('--accent'),conv=css('--conv'),line=css('--line');
+  x.clearRect(0,0,w,h);const lo=2.15,hi=5.1,X=v=>8+(v-lo)/(hi-lo)*(w-16),by=h-24;
+  x.fillStyle=acc;x.globalAlpha=0.16;x.fillRect(X(FREIMAN),by-26,X(hi)-X(FREIMAN),26);x.globalAlpha=0.07;x.fillRect(X(3),by-26,X(FREIMAN)-X(3),26);x.globalAlpha=1;
+  x.strokeStyle=dim;x.lineWidth=1;x.beginPath();x.moveTo(X(lo),by);x.lineTo(X(hi),by);x.stroke();
+  x.fillStyle=ink;for(const m of MK){const v=Math.sqrt(9-4/(m*m)),hh=Math.max(4,24/Math.pow(Math.log2(m)+1,0.6));x.fillRect(X(v)-0.5,by-hh,1,hh)}
+  x.font='10.5px "JetBrains Mono",monospace';x.textAlign='center';x.textBaseline='top';x.fillStyle=dim;
+  [['√5',Math.sqrt(5)],['√8',Math.sqrt(8)],['3',3],['4',4],['4.53',FREIMAN],['5',5]].forEach(([s,v])=>{x.fillRect(X(v)-0.5,by,1,4);x.fillText(s,X(v),by+6)});
+  x.textAlign='left';x.textBaseline='bottom';x.fillText('Markov',X(lo),by-28);x.textAlign='right';x.fillText('Hall\'s ray →',X(hi),by-28);
+  const v=lg&&!lg.rational?(lg.periodic?lg.L:lg.est):null;
+  if(v){const px=Math.min(X(hi)-2,X(v));x.fillStyle=conv;x.beginPath();x.moveTo(px,by-30);x.lineTo(px-5,by-38);x.lineTo(px+5,by-38);x.closePath();x.fill();x.fillRect(px-1,by-30,2,30);
+    if(v>hi){x.textAlign='right';x.textBaseline='top';x.font='600 10.5px "JetBrains Mono",monospace';x.fillText('L ≈ '+(v>1e6?fmtExp(Math.log10(v)):v.toFixed(1))+' →',X(hi),2)}}}
+function geoDraw(){if($('geo').getBoundingClientRect().width<40)return;const c=$('geo');let top=1.9;const arcs=lg&&lg.arcs?lg.arcs:[];for(const [a,al,be] of arcs)top=Math.max(top,Math.min(lg.periodic?3.3:2.3,(al+be)/2+0.25));
+  const ww=c.getBoundingClientRect().width||290;c.style.height=Math.round(Math.max(170,Math.min(360,(top-0.78)*(ww-20)/1.25+24)))+'px';
+  const [x,w,h]=miniCtx(c),ink=css('--ink'),dim=css('--dim'),conv=css('--conv'),line=css('--line');x.clearRect(0,0,w,h);
+  let peak=0;
+  const ybot=0.78,s=Math.min((w-20)/1.25,(h-24)/(top-ybot)),cx=w/2,X=r=>cx+r*s,Y=i=>h-10-(i-ybot)*s;
+  x.strokeStyle=dim;x.lineWidth=1.2;x.beginPath();x.moveTo(X(-0.5),Y(top+1));x.lineTo(X(-0.5),Y(Math.sqrt(3)/2));x.arc(X(0),Y(0),s,Math.PI*4/3,Math.PI*5/3);x.lineTo(X(0.5),Y(top+1));x.stroke();
+  x.fillStyle=dim;x.font='10.5px "JetBrains Mono",monospace';x.textAlign='center';x.textBaseline='top';x.fillText('cusp ↑',X(0),2);x.textBaseline='bottom';x.textBaseline='top';x.fillText('|z| = 1',X(0),Y(1)+3);
+  if(!arcs.length){$('geoNote').textContent='';return}
+  const red=(re,im)=>{for(let i=0;i<200;i++){re-=Math.round(re);const n=re*re+im*im;if(n<1-1e-12){re=-re/n;im=im/n}else break}return [re,im]};
+  x.strokeStyle=conv;x.lineWidth=1.3;x.globalAlpha=lg.periodic?0.95:0.55;let clipped=0;
+  const Hm=top+0.4;
+  arcs.forEach(([a,al,be],k)=>{const odd=k%2===1,lo=odd?-al:-be,hi2=odd?be:al,ce=(lo+hi2)/2,rho=(hi2-lo)/2,r0=odd?-a:0,r1=odd?0:a;
+    if(rho>top)clipped=Math.max(clipped,rho);
+    const D=Math.sqrt(Math.max(0,rho*rho-Hm*Hm)),pieces=D>0?[[-rho,-D],[D,rho]]:[[-rho,rho]];
+    for(const [p0,p1] of pieces){const a0=Math.max(p0,r0-ce),a1=Math.min(p1,r1-ce);if(a1<=a0)continue;
+      const n=Math.min(3000,Math.max(24,Math.ceil((a1-a0)/0.008)));let prev=null;x.beginPath();
+      for(let i=0;i<=n;i++){const d=a0+(a1-a0)*i/n,im2=rho*rho-d*d;if(im2<=1e-14){prev=null;continue}const [u,v]=red(ce+d,Math.sqrt(im2)),px=X(u),py=Y(v);peak=Math.max(peak,v);
+        if(prev&&Math.hypot(px-prev[0],py-prev[1])<0.2*s)x.lineTo(px,py);else x.moveTo(px,py);prev=[px,py]}x.stroke()}});
+  x.globalAlpha=1;c.dataset.peak=peak;
+  if(lg.periodic){const yl=lg.L/2;if(yl<top){x.setLineDash([4,4]);x.strokeStyle=ink;x.lineWidth=1;x.beginPath();x.moveTo(X(-0.62),Y(yl));x.lineTo(X(0.62),Y(yl));x.stroke();x.setLineDash([]);x.fillStyle=ink;x.textAlign='left';x.textBaseline='bottom';x.fillText('L/2',X(0.52),Y(yl)-2)}}
+  $('geoNote').textContent=lg.periodic?'This is the closed geodesic of your number, folded into the fundamental domain. Its highest point is exactly L/2: the Lagrange value is how far the geodesic climbs into the cusp.':
+    'The first '+arcs.length+' segments of the geodesic above your number, folded into the fundamental domain. Each excursion up the cusp is a large continued-fraction term'+(clipped>top?'; the tallest climbs to height '+(clipped>1e6?fmtExp(Math.log10(clipped)):clipped.toFixed(1))+', off the top of this picture':'')+'.'}
+function lgUpd(){lgCompute();lgStatsUpd();specDraw();geoDraw()}
+(()=>{const box=$('mkChips');MKW.forEach(([m,wd])=>{const b=document.createElement('button');b.className='chip';b.textContent=m;b.title='[0; ('+wd.join(', ')+')]';b.onclick=()=>{const v='[0;('+wd.join(',')+')]';$('num').value=v;trace(v)};box.appendChild(b)})})();
+
+/* ---------- Wiener's attack ---------- */
+function modpow(b,e,m){let r=1n;b%=m;while(e>0n){if(e&1n)r=r*b%m;b=b*b%m;e>>=1n}return r}
+function randBig(bits){const n=Math.ceil(bits/32),a=new Uint32Array(n);crypto.getRandomValues(a);let x=0n;for(const v of a)x=(x<<32n)|BigInt(v);return x&((1n<<BigInt(bits))-1n)}
+const SMALLP=(()=>{const o=[];for(let i=3;o.length<300;i+=2)if(o.every(p=>i%p))o.push(i);return o.map(BigInt)})();
+function isPrime(n){if(n<2n)return false;for(const p of SMALLP){if(n===p)return true;if(n%p===0n)return false}let d=n-1n,r=0;while(!(d&1n)){d>>=1n;r++}
+  for(let i=0;i<24;i++){const a=2n+randBig(bl(n))%(n-4n);let x=modpow(a,d,n);if(x===1n||x===n-1n)continue;let ok=false;for(let j=1;j<r;j++){x=x*x%n;if(x===n-1n){ok=true;break}}if(!ok)return false}return true}
+function randPrime(bits){for(;;){const x=randBig(bits)|(1n<<BigInt(bits-1))|(1n<<BigInt(bits-2))|1n;if(isPrime(x))return x}}
+let wk=null;
+function wGen(){const Nb=+$('wBits').value,big=$('wBig').checked;$('wKey').innerHTML='<dt>Generating</dt><dd>finding two '+Nb/2+'-bit primes…</dd>';$('wSteps').innerHTML='';$('wNote').textContent='';$('wRun').disabled=true;
+  setTimeout(()=>{const t0=performance.now();let p=randPrime(Nb/2),q=randPrime(Nb/2);while(q===p)q=randPrime(Nb/2);if(p<q)[p,q]=[q,p];const N=p*q,phi=(p-1n)*(q-1n);
+    const db=big?Math.floor(Nb*0.29):Math.floor(Nb/4)-2;let d;do{d=randBig(db)|(1n<<BigInt(db-1))|1n}while(bgcd(d,phi)!==1n);const e=modinv(d,phi);
+    wk={N,e,d,p,q,Nb,db};const bound=blog10(N)/4-Math.log10(3);
+    $('wKey').innerHTML='<dt>N</dt><dd>'+shortInt(N)+'</dd><dt>e</dt><dd>'+shortInt(e)+'</dd><dt>Secret d</dt><dd>'+db+' bits, about 10'+sup(Math.round(blog10(d)))+' (Wiener\'s bound N^¼/3 ≈ 10'+sup(Math.round(bound))+(blog10(d)<bound?', inside it':', above it')+')</dd><dt>Made in</dt><dd>'+Math.round(performance.now()-t0)+' ms</dd>';
+    $('wRun').disabled=false},20)}
+function wRun(){if(!wk)return;const {N,e}=wk,t0=performance.now();let n=e,dd=N,h1=1n,h0=0n,k1=0n,k0=1n;const rows=[];let win=-1,res=null;
+  for(let i=0;dd!==0n&&i<5000;i++){const a=n/dd;const k=a*h1+h0,d=a*k1+k0;h0=h1;h1=k;k0=k1;k1=d;[n,dd]=[dd,n-a*dd];
+    if(k===0n){rows.push([i,k,d,'k = 0, skip']);continue}
+    const t=e*d-1n;if(t%k!==0n){rows.push([i,k,d,'(ed − 1)/k not an integer']);continue}
+    const ph=t/k,sm=N-ph+1n,disc=sm*sm-4n*N;if(disc<0n){rows.push([i,k,d,'no real roots']);continue}
+    const r=isqrt(disc);if(r*r!==disc){rows.push([i,k,d,'φ guess fails: disc not a square']);continue}
+    const p=(sm+r)/2n,q=(sm-r)/2n;if(p*q===N){win=i;res={p,q,d,ph};rows.push([i,k,d,'factors N']);break}rows.push([i,k,d,'roots do not multiply to N'])}
+  const ms=(performance.now()-t0).toFixed(1);
+  $('wSteps').innerHTML=rows.slice(-60).map(r=>'<div class="'+(r[0]===win?'win':'no')+'">#'+(r[0]+1)+'  '+shortInt(r[1])+'/'+shortInt(r[2])+'  '+(r[0]===win?'✓ ':'· ')+r[3]+'</div>').join('');
+  if(res){$('wNote').innerHTML='Recovered <b>d</b> at convergent '+(win+1)+' of e/N in '+ms+' ms: '+(res.d===wk.d?'matches the secret key':'?')+'. Factors '+shortInt(res.p)+' × '+shortInt(res.q)+'. The circle at k/d has radius 1/(2d²), and the trail just flew you to it.';
+    $('num').value=e+'/'+N;trace(e+'/'+N);setTimeout(()=>goConv(win),60)}
+  else{$('wNote').textContent='No convergent of e/N gave the key ('+rows.length+' checked, '+ms+' ms). With d this large, Wiener\'s attack fails. Lattice methods (Boneh–Durfee) push the limit to about N^0.292, but not past it.';$('num').value=e+'/'+N;trace(e+'/'+N)}}
+
+/* ---------- Rademacher ---------- */
+function dedekind(h,k){let s=0;for(let r=1;r<k;r++){const x=h*r/k,f=x-Math.floor(x);s+=(r/k-0.5)*(f<1e-12||f>1-1e-12?0:f-0.5)}return s}
+function gcdN(a,b){while(b){[a,b]=[b,a%b]}return a}
+function radA(k,n){let s=0;for(let h=0;h<k;h++){if(gcdN(h,k)!==1)continue;s+=Math.cos(Math.PI*(dedekind(h,k)-2*((n*h)%k)/k))}return s}
+function radT(k,n,A){const lam=Math.sqrt(n-1/24),C=Math.PI*Math.sqrt(2/3),x=C*lam/k,dl=(C/k)*Math.cosh(x)/lam-Math.sinh(x)/(lam*lam);return Math.sqrt(k)/(Math.PI*Math.SQRT2)*A*dl/(2*lam)}
+const partCache=[1n];function partExact(n){for(let m=partCache.length;m<=n;m++){let s=0n;for(let j=1;;j++){const g1=j*(3*j-1)/2,g2=j*(3*j+1)/2;if(g1>m)break;const sg=j%2?1n:-1n;s+=sg*partCache[m-g1];if(g2<=m)s+=sg*partCache[m-g2]}partCache.push(s)}return partCache[n]}
+function fareyList(N){const out=[[0,1]];let a=0,b=1,c=1,d=N;while(c<=N){const k=Math.floor((N+b)/d);[a,b,c,d]=[c,d,k*c-a,k*d-b];out.push([a,b])}return out}
+function radUpd(){const N=+$('rN').value,n=Math.max(1,Math.min(2000,Math.round(+$('rNum').value||1)));$('rNOut').textContent=N;
+  const ex=partExact(n),exS=ex.toString();let sum=0,rows='',hit=0;const K=Math.max(N,1);
+  for(let k=1;k<=Math.max(K,12);k++){const A=radA(k,n),t=radT(k,n,A);sum+=t;const inPath=k<=N;
+    const agree=(()=>{const s=sum.toPrecision(16).replace('.','').replace(/e.*/,'');let i=0;while(i<exS.length&&i<15&&s[i]===exS[i])i++;return i})();
+    if(!hit&&exS.length<=15&&Math.abs(sum-Number(ex))<0.5)hit=k;
+    rows+='<tr'+(inPath?'':' style="opacity:.45"')+'><td>'+k+'</td><td>'+A.toFixed(3)+'</td><td>'+(Math.abs(t)<1e5&&Math.abs(t)>1e-3?t.toFixed(4):t.toExponential(3))+'</td><td>'+(exS.length<=15?Math.round(sum).toLocaleString('en-US'):sum.toPrecision(15))+'</td></tr>'}
+  $('rTab').innerHTML='<tr><th>k</th><th>A_k(n)</th><th>term</th><th>running sum</th></tr>'+rows;
+  $('rStats').innerHTML='<dt>Exact p('+n+')</dt><dd>'+(exS.length<=40?BigInt(exS).toLocaleString('en-US'):shortInt(ex))+'</dd><dt>Series</dt><dd>'+(exS.length<=15?(hit?'rounds to the exact value after '+hit+' term'+(hit>1?'s':'')+(hit<=N?', inside your path':', so raise N to '+hit+' for the path to capture it'):'not yet within 0.5'):'p('+n+') has '+exS.length+' digits, more than double precision holds; the first term alone already gets the leading digits right')+'</dd>';
+  req()}
+function drawRad(){if(!$('rShow').checked)return;const N=+$('rN').value,F=fareyList(N),acc=css('--ink');ctx.lineWidth=3;ctx.strokeStyle=acc;
+  const tp=(a,b)=>{const g1=geo(BigInt(a[0]),BigInt(a[1])),g2=geo(BigInt(b[0]),BigInt(b[1]));const f=g1.R/(g1.R+g2.R);return [g1.X+(g2.X-g1.X)*f,g1.Y+(g2.Y-g1.Y)*f]};
+  ctx.beginPath();
+  for(let i=0;i<F.length;i++){const g=geo(BigInt(F[i][0]),BigInt(F[i][1]));if(g.R>2e4||g.X+g.R<0||g.X-g.R>W)continue;
+    const T=Math.PI*1.5;let a1=T,a2=T;
+    if(i>0){const t=tp(F[i],F[i-1]);a1=Math.atan2(t[1]-g.Y,t[0]-g.X);if(a1<=Math.PI/2)a1+=2*Math.PI}
+    if(i<F.length-1){const t=tp(F[i],F[i+1]);a2=Math.atan2(t[1]-g.Y,t[0]-g.X)+2*Math.PI}
+    ctx.moveTo(g.X+g.R*Math.cos(a1),g.Y+g.R*Math.sin(a1));ctx.arc(g.X,g.Y,g.R,a1,a2,false)}
+  ctx.stroke()}
+
+/* ---------- Farey family ---------- */
+function parents(p,q){if(q===1n)return [[p-1n,1n],[1n,0n]];const b=modinv(p,q),a=(p*b-1n)/q;return [[a,b],[p-a,q-b]]}
+function children(p,q){const [l,r]=parents(p,q);return [[l[0]+p,l[1]+q],[p+r[0],q+r[1]]]}
+
+/* ---------- targets ---------- */
+function isqrt(n){if(n<2n)return n;let x=1n<<BigInt(Math.ceil(bl(n)/2)+1);for(;;){const y=(x+n/x)>>1n;if(y>=x)return x;x=y}}
+function icbrt(n){if(n<2n)return n;let x=1n<<BigInt(Math.ceil(bl(n)/3)+1);for(;;){const y=(2n*x+n/(x*x))/3n;if(y>=x)return x;x=y}}
+function atanInv(x,one){let x2=x*x,term=one/x,sum=term,k=1n,sign=-1n;while(term){term/=x2;const t=term/(2n*k+1n);if(!t)break;sum+=sign*t;sign=-sign;k++}return sum}
+function piFix(){const g=1n<<BigInt(TB+32);return (16n*atanInv(5n,g)-4n*atanInv(239n,g))>>32n}
+function eFix(){const g=1n<<BigInt(TB+32);let s=0n,t=g,k=0n;while(t){s+=t;k++;t/=k}return s>>32n}
+function parse(str){
+  const src=str.replace(/π/g,'pi').replace(/φ/g,'phi').replace(/√/g,'sqrt').replace(/∛/g,'cbrt').replace(/×/g,'*').replace(/−/g,'-').toLowerCase();let i=0;
+  const ws=()=>{while(src[i]===' ')i++},peek=()=>{ws();return src[i]};
+  function expr(){let v=term();for(;;){const c=peek();if(c==='+'){i++;v+=term()}else if(c==='-'){i++;v-=term()}else return v}}
+  function term(){let v=pw();for(;;){const c=peek();if(c==='*'){i++;v*=pw()}else if(c==='/'){i++;v/=pw()}else return v}}
+  function pw(){let v=un();if(peek()==='^'){i++;v=Math.pow(v,pw())}return v}
+  function un(){const c=peek();if(c==='-'){i++;return -un()}if(c==='+'){i++;return un()}return atom()}
+  function atom(){ws();const c=src[i];if(c==='('){i++;const v=expr();if(peek()!==')')throw 0;i++;return v}
+    const m=/^(\d+\.?\d*(e[+-]?\d+)?|\.\d+)/.exec(src.slice(i));if(m){i+=m[0].length;return parseFloat(m[0])}
+    const w=/^[a-z]+/.exec(src.slice(i));if(w){i+=w[0].length;const n=w[0];if(n==='pi')return Math.PI;if(n==='e')return Math.E;if(n==='phi')return (1+Math.sqrt(5))/2;
+      const F={sqrt:Math.sqrt,cbrt:Math.cbrt,ln:Math.log,log:Math.log10,sin:Math.sin,cos:Math.cos,tan:Math.tan,exp:Math.exp};if(F[n])return F[n](atom())}
+    throw 0}
+  const v=expr();ws();if(i<src.length)throw 0;return v}
+function exactTarget(raw){
+  const s=raw.trim().toLowerCase().replace(/\s+/g,'').replace(/π/g,'pi').replace(/φ/g,'phi').replace(/√/g,'sqrt').replace(/∛/g,'cbrt').replace(/−/g,'-');
+  let m;
+  if((m=/^\[(-?\d+)(?:;(\d+(?:,\d+)*)?(?:,?\((\d+(?:,\d+)*)\))?)?\]$/.exec(s))){
+    const a0=BigInt(m[1]),pre=m[2]?m[2].split(',').map(BigInt):[],per=m[3]?m[3].split(',').map(BigInt):[];
+    if(pre.concat(per).some(v=>v<1n))throw 0;
+    if(!per.length){let h=1n,h0=0n,k=0n,k0=1n;for(const a of [a0,...pre]){[h,h0]=[a*h+h0,h];[k,k0]=[a*k+k0,k]}return {n:h,d:k,exact:true,rational:true}}
+    let P1=1n,P2=0n,Q1=0n,Q2=1n;for(const a of per){[P1,P2,Q1,Q2]=[P1*a+P2,P1,Q1*a+Q2,Q1]}
+    const D=(P1-Q2)**2n+4n*Q1*P2;let v=((P1-Q2)*ONE+isqrt(D<<BigInt(2*TB)))/(2n*Q1);
+    for(let i=pre.length-1;i>=0;i--)v=pre[i]*ONE+ONE*ONE/v;
+    return {n:a0*ONE+ONE*ONE/v,d:ONE,exact:true}}
+  if(s==='pi')return {n:piFix(),d:ONE,exact:true};
+  if(s==='e')return {n:eFix(),d:ONE,exact:true};
+  if(s==='phi')return {n:(ONE+isqrt(5n<<BigInt(2*TB)))/2n,d:ONE,exact:true};
+  if((m=/^sqrt\(?(\d+)\)?$/.exec(s)))return {n:isqrt(BigInt(m[1])<<BigInt(2*TB)),d:ONE,exact:true};
+  if((m=/^(?:cbrt\(?(\d+)\)?|(\d+)\^\(1\/3\))$/.exec(s)))return {n:icbrt(BigInt(m[1]||m[2])<<BigInt(3*TB)),d:ONE,exact:true};
+  if((m=/^(-?\d+)\/(\d+)$/.exec(s))&&BigInt(m[2])>0n)return {n:BigInt(m[1]),d:BigInt(m[2]),exact:true,rational:true};
+  if((m=/^(-?)(\d*)\.?(\d*)$/.exec(s))&&(m[2]||m[3])){const d=10n**BigInt(m[3].length),n=BigInt((m[2]||'0')+m[3])*(m[1]?-1n:1n);return {n,d,exact:true,rational:true}}
+  const x=parse(raw);if(!isFinite(x))throw 1;const d=1n<<52n;return {n:BigInt(Math.round(x*2**52)),d,exact:false}}
+function trace(str){
+  const err=$('numErr');err.textContent='';let t;
+  try{t=exactTarget(str)}catch(e){err.textContent=e===1?'That isn\'t a finite number.':'Couldn\'t read that. Try pi, sqrt(2), cbrt(5), 355/113, 0.618, a continued fraction like [0;(2,2,1,1)], or an expression like ln(2).';return}
+  tgt=t;const lim=t.rational?null:1n<<BigInt(Math.max(8,Math.floor(bl(t.d)/2)-2));
+  let n=t.n,d=t.d;const a=[];convs=[];semis=[];let h1=1n,h0=0n,k1=0n,k0=1n;
+  for(let i=0;i<2500&&d!==0n;i++){const ai=floorDiv(n,d);
+    if(i>0){const cap=ai>40n?40n:ai;for(let j=1n;j<cap;j++){const sp=j*h1+h0,sq=j*k1+k0;if(lim&&sq>lim)break;if(semis.length<4000)semis.push([sp,sq])}}
+    const h=ai*h1+h0,k=ai*k1+k0;if(lim&&k>lim)break;a.push(ai);convs.push([h,k]);h0=h1;h1=h;k0=k1;k1=k;[n,d]=[d,n-ai*d]}
+  tgtTerms=a;lgUpd();
+  const shown=a.slice(0,30).map(String);
+  $('cfOut').textContent='Continued fraction: ['+shown[0]+(shown.length>1?'; '+shown.slice(1).join(', '):'')+(a.length>30?', …':'')+']'+(a.length>30?'  ('+a.length+' terms known)':'');
+  $('numNote').textContent=t.exact?(t.rational?'Exact fraction: the trail ends at its own circle.':'Computed to about 1,000 digits, so the trail follows the true number for '+convs.length.toLocaleString()+' convergents.'):'Typed expressions use ordinary 16-digit precision, so past about 10⁻¹⁵ the trail follows that approximation rather than the true number. π, e, φ, sqrt(n), cbrt(n) and fractions are exact.';
+  const box=$('convs');box.innerHTML='';
+  convs.slice(0,24).forEach((f,i)=>{const b=document.createElement('button');b.className='chip conv';const lab=f[0]+'/'+f[1];b.textContent=lab.length<=15?lab:'#'+(i+1);b.title=lab.length<=15?'':shortInt(f[0])+' / '+shortInt(f[1]);b.onclick=()=>goConv(i);box.appendChild(b)});
+  convIdx=-1;$('convNav').hidden=false;updNav();
+  anim=null;home();dirty=true;goConv(0);
+}
+function updNav(){$('cStat').textContent=convIdx<0?convs.length.toLocaleString()+' convergents':'#'+(convIdx+1)+' of '+convs.length.toLocaleString()+(convIdx>=0?' · q ≈ '+fmtExp(blog10(convs[convIdx][1])):'');
+  $('cPrev').disabled=convIdx<=0;$('cNext').disabled=convIdx>=convs.length-1;
+  document.querySelectorAll('#convs .chip').forEach((c,i)=>c.classList.toggle('on',i===convIdx))}
+function goConv(i){if(i<0||i>=convs.length)return;convIdx=i;const [p,q]=convs[i];select(p,q);flyTo(p,q);updNav()}
+
+/* ---------- motion ---------- */
+function home(){L=Math.log10(Math.min(W/1.15,(H-BASE-10)/0.62));setP(wantP(L));C=1n<<BigInt(P-1);yOff=0;dirty=true}
+function flyTo(p,q){
+  const L1=Math.min(2400,Math.log10(Math.max(40,(H-BASE)*0.5))+2*blog10(q)),Pf=wantP(Math.max(L1,L));
+  setP(Pf);const C1=(p*(1n<<BigInt(Pf)))/q;
+  anim={t0:performance.now(),dur:Math.min(2200,700+Math.abs(L1-L)*60),L0:L,L1,C0:C,C1,Pf,y0:yOff};requestAnimationFrame(tick)}
+function tick(){if(!anim)return;const now=performance.now(),k=Math.min(1,(now-anim.t0)/anim.dur),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+  const Lc=anim.L0+(anim.L1-anim.L0)*e;let f;
+  if(Math.abs(anim.L1-anim.L0)<1e-6)f=e;else{const r1=Math.pow(10,anim.L0-anim.L1),rc=Math.pow(10,anim.L0-Lc);f=(1-rc)/(1-r1)}
+  P=anim.Pf;C=anim.C0+((anim.C1-anim.C0)*BigInt(Math.round(Math.max(0,Math.min(1,f))*2**40)))/(1n<<40n);
+  L=Lc;yOff=anim.y0*(1-e);setP(wantP(Math.max(L,anim.L1)));draw();
+  if(k<1)requestAnimationFrame(tick);else{anim=null;L=anim===null?Lc:Lc;setP(wantP(L));draw()}}
+function req(){dirty=true;if(!anim)requestAnimationFrame(()=>{if(dirty&&!anim)draw()})}
+function zoomAt(mx,my,k){anim=null;const nl=Math.max(Math.log10(20),Math.min(2400,L+Math.log10(k))),kk=Math.pow(10,nl-L);
+  const A=C+pxToFix(mx-W/2),oldP=P;L=nl;const np=wantP(L);let A2=np>oldP?A<<BigInt(np-oldP):A>>BigInt(oldP-np);P=np;C=A2-pxToFix(mx-W/2);
+  const a=H-BASE-my;yOff=Math.max(0,(a+yOff)*kk-a);req()}
+
+/* ---------- selection ---------- */
+function select(p,q){sel=[p,q];const [l,rt]=parents(p,q),[c1,c2]=children(p,q),fr=(a,b)=>b===0n?'∞ (1/0)':shortInt(a)+'/'+shortInt(b);
+  let near='';if(tgt){const num=babs(tgt.n*q-p*tgt.d);if(num===0n)near='<dt>|x − p/q|</dt><dd>0, this is the number</dd>';else{const ld=blog10(num)-blog10(tgt.d)-blog10(q),lh=blog10(num)+blog10(q)-blog10(tgt.d);
+    near='<dt>|x − p/q|</dt><dd>'+fmtExp(ld)+'</dd><dt>q²·|x − p/q|</dt><dd>'+Math.pow(10,lh).toFixed(4)+(Math.pow(10,lh)<1/Math.sqrt(5)?' &lt; 1/√5':'')+'</dd>'}}
+  const ps=p.toString(),qs=q.toString(),big=Math.max(ps.length,qs.length)>9;
+  $('selBox').innerHTML='<div class="sel"><span class="frac"'+(big?' style="font-size:16px"':'')+'>'+(q===1n?'<span>'+shortInt(p)+'</span>':'<span>'+shortInt(p)+'</span><span>'+shortInt(q)+'</span>')+'</span><dl>'+
+    '<dt>Value</dt><dd>'+trunc(decStr(p,q,Math.min(40,Math.ceil(2*blog10(q))+4)),44)+'</dd><dt>Radius</dt><dd>1/(2q²) ≈ '+fmtExp(-LOG2-2*blog10(q))+'</dd></dl></div>'+
+    '<dl><dt>Continued fraction</dt><dd>'+cfShort(p,q)+(zA?(passes(p,q)?' · in the family':' · not in the family'):'')+'</dd><dt>Farey parents</dt><dd>'+fr(l[0],l[1])+' and '+fr(rt[0],rt[1])+'</dd><dt>Next children</dt><dd>'+fr(c1[0],c1[1])+' and '+fr(c2[0],c2[1])+'</dd>'+near+'</dl>';
+  req()}
+function emptySel(){$('selBox').innerHTML='<p class="sub">Tap any circle. You\'ll see its fraction, its two Farey parents (the circles it nests between), its next children, and every visible circle it touches.</p>'}
+
+/* ---------- input ---------- */
+let pts=new Map(),pinch=null,moved=false,downAt=null;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.offsetX,e.offsetY]);moved=false;downAt=[e.offsetX,e.offsetY];anim=null;
+  if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),last:Math.hypot(a[0]-b[0],a[1]-b[1])}}});
+cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,[e.offsetX,e.offsetY]);
+  if(pts.size===2&&pinch){const [a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d>0&&pinch.last>0)zoomAt((a[0]+b[0])/2,(a[1]+b[1])/2,d/pinch.last);pinch.last=d;moved=true;return}
+  const dx=e.offsetX-prev[0],dy=e.offsetY-prev[1];if(Math.hypot(e.offsetX-downAt[0],e.offsetY-downAt[1])>4)moved=true;
+  if(moved){cv.classList.add('drag');C-=pxToFix(dx);yOff=Math.max(0,yOff+dy);req()}});
+function up(e){pts.delete(e.pointerId);if(pts.size<2)pinch=null;cv.classList.remove('drag');
+  if(!moved&&e.type==='pointerup'){let hit=null;for(let i=vis.length-1;i>=0;i--){const c=vis[i];
+      if(c.R<2e4){const dx=e.offsetX-c.X,dy=e.offsetY-c.Y;if(dx*dx+dy*dy<=c.R*c.R){hit=c;break}}
+      else{const dd=e.offsetX-c.X;if(Math.abs(dd)<c.R&&e.offsetY<=baseY()-dd*dd/(c.R+Math.sqrt(c.R*c.R-dd*dd))){hit=c;break}}}
+    if(hit)select(hit.p,hit.q);else{sel=null;emptySel();req()}}}
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.offsetX,e.offsetY,Math.exp(-e.deltaY*0.0015))},{passive:false});
+$('zIn').onclick=()=>zoomAt(W/2,H*0.6,2);$('zOut').onclick=()=>zoomAt(W/2,H*0.6,0.5);
+$('home').onclick=()=>{anim=null;home();req()};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='+'||e.key==='=')zoomAt(W/2,H*0.6,1.5);else if(e.key==='-')zoomAt(W/2,H*0.6,1/1.5);else if(e.key==='0'){home();req()}});
+$('go').onclick=()=>trace($('num').value);$('num').addEventListener('keydown',e=>{if(e.key==='Enter')trace($('num').value)});
+$('num').addEventListener('input',()=>$('numErr').textContent='');
+document.querySelectorAll('#presets .chip').forEach(b=>b.onclick=()=>{$('num').value=b.dataset.v;trace(b.dataset.v)});
+$('cPrev').onclick=()=>goConv(convIdx-1);$('cNext').onclick=()=>goConv(convIdx+1);
+function areaUpd(){const v=+$('qmax').value,inf=v>=401,Q=inf?400:v;let A=0;for(let q=1;q<=Q;q++){let ph=0;for(let p=1;p<=q;p++){let a=p,b=q;while(b){[a,b]=[b,a%b]}if(a===1)ph++}A+=ph*Math.PI/(4*Math.pow(q,4))}
+  $('area').textContent=A.toFixed(6)+' / 0.872284';$('qmaxOut').textContent=inf?'∞':Q}
+$('qmax').oninput=()=>{areaUpd();req()};
+$('labFilter').onchange=()=>{zA=$('labFilter').checked?1:0;labRead();zStatsUpd();if(sel)select(sel[0],sel[1]);req()};
+['labA','labB','labT'].forEach(id=>$(id).addEventListener('change',()=>{if(labRead()){zStatsUpd();labEstimate();if(sel)select(sel[0],sel[1]);req()}}));
+$('labN').onchange=labEstimate;$('labRun').onclick=labRun;$('labStop').onclick=labStop;$('labW').onchange=labMapSetup;$('labStart').oninput=labMapDraw;
+$('ghost').onchange=req;
+$('wGen').onclick=wGen;$('wRun').onclick=wRun;
+$('rShow').onchange=()=>{if($('rShow').checked){anim=null;home()}req()};$('rN').oninput=radUpd;$('rNum').oninput=radUpd;['labels','tangents','farey','semi'].forEach(id=>$(id).onchange=req);
+let pal=null;
+const reAll=()=>{pal=null;req();specDraw();geoDraw()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',reAll);
+new MutationObserver(reAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{size();req();specDraw();geoDraw()},100)});
+(()=>{const T=[['num','Number'],['display','Display'],['zaremba','Obstructions'],['orbit','Orbits'],['markov','Markov'],['rsa','RSA'],['rad','Partitions'],['about','About']],nav=$('tabs');
+  const set=t=>{document.querySelectorAll('aside .card[data-tab]').forEach(c=>c.classList.toggle('hid',c.dataset.tab!==t));nav.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+    try{localStorage.setItem('fordTab',t)}catch(e){}if(t==='markov'){specDraw();geoDraw()}if(t==='zaremba'){zStatsUpd();labMapDraw()}};
+  T.forEach(([t,l])=>{const b=document.createElement('button');b.type='button';b.className='tab';b.dataset.t=t;b.textContent=l;b.onclick=()=>set(t);nav.appendChild(b)});
+  let t0='num';try{t0=localStorage.getItem('fordTab')||'num'}catch(e){}if(!T.some(x=>x[0]===t0))t0='num';set(t0)})();
+size();home();areaUpd();emptySel();specDraw();geoDraw();radUpd();labRead();zStatsUpd();$('farey').checked=true;select(2n,5n);draw();
+</script>
+
+
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}</script>
+</body></html>
